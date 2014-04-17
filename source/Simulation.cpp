@@ -96,8 +96,8 @@ Simulation::Simulation( int trt, int sid, SimPars * spPtr ) {
       int newNH = (*ita)->getNeighborhood();
       HostsByID::iterator itt = allHosts.find( (*it)->getID() );
       allHouseholds.erase( (*itt)->getHousehold() );
-      allHosts.modify( itt, updateHousehold( newHH ) );
-      allHosts.modify( itt, updateNeighborhood( newNH ) );
+	  allHosts.modify(itt, [=](boost::shared_ptr<Host> h) { h->setHousehold(newHH); });
+	  allHosts.modify(itt, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(newNH); });
     }
   } // end while
   initOutput();
@@ -524,7 +524,7 @@ void Simulation::ageHost( int id ) {
       } // end for each serotype
     } // end for if host infected
   } // end for if in epid part of simulation
-  allHosts.modify( it, updateAge() );
+  allHosts.modify(it, [](boost::shared_ptr<Host> h) { h->incrementAge(); });
 }
 
 void Simulation::pairHost( int id ) {
@@ -604,20 +604,20 @@ void Simulation::partner2Hosts( int hid1, int hid2 ) {
       HostsByID::iterator it1 = allHosts.find( hid1 ); // Original host
       int hhold1 = (*it1)->getHousehold();
       int nhood1 = (*it1)->getNeighborhood();
-      allHosts.modify( it1, updatePartner( hid2 ) ); // Partner host
+	  allHosts.modify(it1, [=](boost::shared_ptr<Host> h) { h->setPartner(hid2); }); // Partner host
       HostsByID::iterator it2 = allHosts.find( hid2 ); // Partner host
       int hhold2 = (*it2)->getHousehold();
       int nhood2 = (*it2)->getNeighborhood();
-      allHosts.modify( it2, updatePartner( hid1 ) ); 
+	  allHosts.modify(it2, [=](boost::shared_ptr<Host> h) { h->setPartner(hid1); });
 
       // Check if initiating host still lives at home. If so, fledge and give new household & neighborhood.
       if ( (*it1)->hasFledged() == false ) {
-	allHosts.modify( it1, updateFledge( true ) ); 
+		  allHosts.modify(it1, [](boost::shared_ptr<Host> h) { h->setFledge(true); });
 	int famSize = allHosts.get<household>().count( hhold1 );
 	if ( famSize != 1 ) {
-	  allHosts.modify( it1, updateHousehold( hholdCtr ) );
+		allHosts.modify(it1, [=](boost::shared_ptr<Host> h) { h->setHousehold(hholdCtr); });
 	  int randNeighborhood = (int)( floor( (double)NUM_NEIGHBORHOODS*r01(rng) ) );
-	  allHosts.modify( it1, updateNeighborhood( randNeighborhood ) );
+	  allHosts.modify(it1, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(randNeighborhood); });
 	  if ( (*it1)->isInfected() ) {
 	    for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
 	      int infections = (*it1)->isInfectedZ(s);
@@ -661,8 +661,8 @@ void Simulation::partner2Hosts( int hid1, int hid2 ) {
 	  it = allHosts.find( indID ); 
 	  int thisAge = (*it)->getAgeInY();
 	  int origNhood = (*it)->getNeighborhood();
-	  allHosts.modify( it, updateHousehold( hhold1 ) );
-	  allHosts.modify( it, updateNeighborhood( nhood1 ) );
+	  allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setHousehold(hhold1); });
+	  allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(nhood1); });
 	  if ( (*it)->isInfected() ) {
 	    for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
 	      int infections = (*it)->isInfectedZ(s);
@@ -675,8 +675,8 @@ void Simulation::partner2Hosts( int hid1, int hid2 ) {
       } else {  // New partner still living in family of origin, so just update partner
 	int origNhood = (*it2)->getNeighborhood();
 	int age = (*it2)->getAgeInY();
-	allHosts.modify( it2, updateHousehold( hhold1 ) );
-	allHosts.modify( it2, updateNeighborhood( nhood1 ) );
+	allHosts.modify(it2, [=](boost::shared_ptr<Host> h) { h->setHousehold(hhold1); });
+	allHosts.modify(it2, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(nhood1); });
 	if ( (*it2)->isInfected() ) {
 	  for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
 	    int infections = (*it2)->isInfectedZ(s);
@@ -684,7 +684,7 @@ void Simulation::partner2Hosts( int hid1, int hid2 ) {
 	    numInfecteds[ age ][ s ][ nhood1 ] += infections;
 	  }
 	}
-	allHosts.modify( it2, updateFledge( true ) ); 
+	allHosts.modify(it2, [=](boost::shared_ptr<Host> h) { h->setFledge(true); });
       }
 } 
 
@@ -706,11 +706,11 @@ void Simulation::fledgeHost( int id ) {
     int currentNhood = (*it)->getNeighborhood();
     int hhSize = allHosts.get<household>().count( currentHH );
     if ( hhSize == 1 ) {
-      allHosts.modify( it, updateFledge( true ) );
+		allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setFledge(true); });
     } else {
-      allHosts.modify( it, updateHousehold( hholdCtr ) );
+		allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setHousehold(hholdCtr); });
       int randNeighborhood = (int)(floor( (double)NUM_NEIGHBORHOODS*r01(rng) ));
-      allHosts.modify( it, updateNeighborhood( randNeighborhood )); 
+	  allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(randNeighborhood); });
       int age = (*it)->getAgeInY();
       int infections;
       if ( (*it)->isInfected() ) {
@@ -722,7 +722,7 @@ void Simulation::fledgeHost( int id ) {
 	  }
 	}
       }
-      allHosts.modify( it, updateFledge( true ) );
+	  allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setFledge(true); });
       allHouseholds.insert( hholdCtr ); 
       hholdCtr++;
     } // end if come from household > 1
@@ -746,8 +746,8 @@ void Simulation::infectHost( int id, int s ) { // Could rewrite to take itr inst
     numInfecteds[ (*it)->getAgeInY() ][ s ][ (*it)->getNeighborhood() ]++;
   }
   if ( s < HFLU_INDEX || (*it)->isInfectedHflu() == false ) {
-    allHosts.modify( it, updateCarriage( s, t, currentEvents, rng ) );
-    allHosts.modify( it, updateInf( true ) );
+	  allHosts.modify(it, [&](boost::shared_ptr<Host> h) { h->becomeInfected(s, t, currentEvents, rng); });
+	  allHosts.modify(it, [](boost::shared_ptr<Host> h) { h->setInf(true); });
   }
 }
 
@@ -758,15 +758,15 @@ void Simulation::recoverHost( int id, int s ) {
   if ( s != HFLU_INDEX || ( s == HFLU_INDEX && (*it)->isInfectedZ(s) == 1 ) ) {
     numInfecteds[ (*it)->getAgeInY() ][ s ][ (*it)->getNeighborhood() ]--;
   }
-  allHosts.modify( it, updateRecovery( s, t, currentEvents ) );
+  allHosts.modify(it, [&](boost::shared_ptr<Host> h) { h->recover(s, t, currentEvents); });
   if ( (*it)->totStrains() == 0 ) {
-    allHosts.modify( it, updateInf( false ) );
+	  allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setInf(false); });
   }
 }
 
 void Simulation::vaccinateHost( int id ) {
   HostsByID::iterator it = allHosts.find( id );
-  allHosts.modify( it, updateVaccination() );	
+  allHosts.modify(it, [](boost::shared_ptr<Host> h) { h->getVaccinated(); });
 }
 
 double Simulation::calcPrev() {
