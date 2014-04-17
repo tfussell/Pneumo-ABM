@@ -433,34 +433,33 @@ void Simulation::runEpidSim( void ) {
 
 // PRIVATE SIMULATION FUNCTIONS
 void Simulation::executeEvent( Event & te ) {
-  switch ( te.eventID ) {
-  case DEATH_EVENT :
+  switch ( te.type ) {
+  case Event::Type::Death :
     killHost( te.hostID );
     break;
-  case FLEDGE_EVENT :
+  case Event::Type::Fledge:
     fledgeHost( te.hostID );
     break; 
-  case PAIR_EVENT :
+  case Event::Type::Pair:
     pairHost( te.hostID );
     break;
-  case BIRTH_EVENT :
+  case Event::Type::Birth:
     birthHost( te.hostID );
     break; 
-  case BIRTHDAY :
+  case Event::Type::Birthday:
     ageHost( te.hostID );
     break;
-  case INFECTION_EVENT :
+  case Event::Type::Infection:
     infectHost( te.hostID, te.s );
     break; 
-  case RECOVERY_EVENT :
+  case Event::Type::Recovery:
     recoverHost( te.hostID, te.s );
     break;
-  case VACCINATION :
+  case Event::Type::Vaccination:
     vaccinateHost( te.hostID );
     break;
   default :
-	  std::cerr << "Event ID " << te.eventID << " attempted and failed." << std::endl;
-    assert(false);
+      throw std::runtime_error("invalid event");
   } 
 }
 
@@ -820,7 +819,7 @@ void Simulation::calcSI() {
 		infectionTime += pow(10,APPROX_NOW); 
 	}
 	if ( infectionTime < (*it)->getDOD() ) {
-	  addEvent( infectionTime, INFECTION_EVENT, (*it)->getID(), s );
+	  addEvent( infectionTime, Event::Type::Infection, (*it)->getID(), s );
 	}
       }
     } // end for each serotype
@@ -1143,11 +1142,11 @@ std::string Simulation::makeBiggerName(std::string suffix1, int index1, std::str
   return thisName;
 }
 
-void Simulation::addEvent( double et, int eid, int hid, int s ) {
+void Simulation::addEvent( double et, Event::Type event_type, int hid, int s ) {
   while ( currentEvents.find( Event(et) ) != currentEvents.end() ) {
     et += pow(10,APPROX_NOW);
-	std::cout << "\tSimulation is adjusting event time to prevent collision (host id " << hid << ", event id " << eid << ", strain " << s << ", event time " << et << ").\n";
+	std::cout << "\tSimulation is adjusting event time to prevent collision (host id " << hid << ", event id " << int(event_type) << ", strain " << s << ", event time " << et << ").\n";
   }
-  Event thisEvent( et, eid, hid, s ); 
+  Event thisEvent( et, event_type, hid, s ); 
   currentEvents.insert( thisEvent );
 }

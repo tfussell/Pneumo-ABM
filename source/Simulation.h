@@ -61,7 +61,7 @@ class Simulation
   std::string makeName(std::string s);
   std::string makeBigName(std::string, int);
   std::string makeBiggerName(std::string, int, std::string, int);
-  void addEvent( double et, int eid, int hid, int s );
+  void addEvent( double et, Event::Type event_type, int hid, int s );
   double calcPrev( void );
 
   // STREAM MANAGEMENT

@@ -168,7 +168,7 @@ void Host::calcLifeHist( double t, EventPQ &cePtr, double initAge, boost::mt1993
   while ( ageAtDeath <= initAge ) {
     ageAtDeath = calcDeath( rng );
   }
-  addEvent( t + ageAtDeath - initAge, DEATH_EVENT, id, cePtr );
+  addEvent(t + ageAtDeath - initAge, Event::Type::Death, id, cePtr);
   DOD = ageAtDeath - initAge + t;
 
   // Set current age (in years)
@@ -180,21 +180,21 @@ void Host::calcLifeHist( double t, EventPQ &cePtr, double initAge, boost::mt1993
     thisT += 365.0;
   }
   while ( thisT < DOD ) {
-    addEvent( thisT, BIRTHDAY, id, cePtr );
+      addEvent(thisT, Event::Type::Birthday, id, cePtr);
     thisT += 365.0;
   }
 
 #ifdef SIM_PCV
   // Schedule vaccination -- implemented as change to susceptibility starting at VACCINATION_START
   if ( VACCINE_AGE < ageAtDeath && VACCINE_AGE > initAge && t >= ( DEM_SIM_LENGTH + VACCINATION_START - VACCINE_AGE ) ) { // means current n-month-olds will get vaccinated starting then
-    addEvent( t + VACCINE_AGE - initAge, VACCINATION, id, cePtr );	
+    addEvent( t + VACCINE_AGE - initAge, Event::Type::Vaccination, id, cePtr );	
   }
 #endif  
 
   // Leave home (if not already dead)
   double ageAtFledge = calcFledge( rng );
   if ( ageAtFledge < ageAtDeath && ageAtFledge > initAge ) {
-    addEvent( t + ageAtFledge - initAge, FLEDGE_EVENT, id, cePtr );
+    addEvent( t + ageAtFledge - initAge, Event::Type::Fledge, id, cePtr );
   }
     
   // Potentially reproduce - no check for min time b/w births
@@ -202,7 +202,7 @@ void Host::calcLifeHist( double t, EventPQ &cePtr, double initAge, boost::mt1993
   for ( int k = 0; k < numKids; k++ ) {
     double birthAge = calcBirthAge( rng );
     if ( birthAge < ageAtDeath && birthAge > initAge ) {
-      addEvent( t + birthAge - initAge, BIRTH_EVENT, id, cePtr );
+      addEvent( t + birthAge - initAge, Event::Type::Birth, id, cePtr );
     }
   } 
     
@@ -211,7 +211,7 @@ void Host::calcLifeHist( double t, EventPQ &cePtr, double initAge, boost::mt1993
   if ( r01(rng) < perCapProb ) { 
     double pairAge = calcPairAge( rng );
     if ( pairAge < ageAtDeath && pairAge > initAge ) {
-      addEvent( t + pairAge - initAge, PAIR_EVENT, id, cePtr );
+        addEvent(t + pairAge - initAge, Event::Type::Pair, id, cePtr);
     }
   }
 }
@@ -221,12 +221,12 @@ double Host::calcDeath( boost::mt19937 & rng ) {
   return 365.0*( (double)age_death + r01(rng) );
 }
 
-void Host::addEvent( double et, int eid, int hid, EventPQ & ceptr ) {
+void Host::addEvent(double et, Event::Type eid, int hid, EventPQ & ceptr) {
   Event thisEvent( et, eid, hid, 0 ); 
   ceptr.insert( thisEvent );
 }
 
-void Host::addEvent( double et, int eid, int hid, int s, EventPQ & ceptr ) {
+void Host::addEvent(double et, Event::Type eid, int hid, int s, EventPQ & ceptr) {
   Event thisEvent( et, eid, hid, s );
   ceptr.insert( thisEvent );
 }
@@ -273,7 +273,7 @@ void Host::becomeInfected( int s, double currentTime, EventPQ & ce, boost::mt199
 	}
 	(iter->second).recT = newRecTime;
 	if ( newRecTime < DOD ) {
-	  addEvent( newRecTime, RECOVERY_EVENT, id, s, ce );
+        addEvent(newRecTime, Event::Type::Recovery, id, s, ce);
 	}
       } else if ( s == HFLU_INDEX && isInfectedPneumo() ) { // end if oldRecTime == 0.0 (i.e., dealing with recovery to challenging strain); now looking only for pneumo residents to Hflu challenge
 	int thisS = iter->first; // figure out strain currently carried; do not want to update hflu strains
@@ -289,7 +289,7 @@ void Host::becomeInfected( int s, double currentTime, EventPQ & ce, boost::mt199
 	      newRecTime += pow(10,APPROX_NOW);  
 	    }
 	    (iter->second).recT = newRecTime;
-	    addEvent( newRecTime, RECOVERY_EVENT, id, thisS, ce );
+        addEvent(newRecTime, Event::Type::Recovery, id, thisS, ce);
 	  } else { // ... else just update infection struct
 	    (iter->second).recT = newRecTime;
 	  }

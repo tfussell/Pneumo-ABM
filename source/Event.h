@@ -4,28 +4,33 @@
 #include <set>
 #include <functional>
 
-#define DEATH_EVENT 0
-#define FLEDGE_EVENT 1
-#define PAIR_EVENT 2
-#define DIVORCE_EVENT 3
-#define BIRTH_EVENT 4
-#define BIRTHDAY 5
-#define INFECTION_EVENT 6
-#define RECOVERY_EVENT 7
-#define VACCINATION 8
-
 struct Event {
-
  public:
-  explicit Event(double t) : time(t), eventID(), hostID(), s() {}
-Event(double t, int eid, int hid, int stype) : time(t), eventID( eid ), hostID( hid ), s(stype) {}
+     enum class Type
+     {
+         Death = 0,
+         Fledge = 1,
+         Pair = 2,
+         Divorce = 3,
+         Birth = 4,
+         Birthday = 5,
+         Infection = 6,
+         Recovery = 7,
+         Vaccination = 8,
+         Invalid = 9,
+         Last = Vaccination,
+         First = Death
+     };
+
+  explicit Event(double t) : time(t), type(Type::Invalid), hostID(), s() {}
+Event(double t, Type type, int hid, int stype) : time(t), type(type), hostID( hid ), s(stype) {}
 
   bool operator < ( const Event & rhs ) const {
     return ( time < rhs.time );
   }
 
   double time;
-  int eventID;
+  Type type;
   int hostID;
   int s; // strain, used in infection events
 };

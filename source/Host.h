@@ -47,8 +47,8 @@ class Host
   // MEMBER FUNCTION PROTOTYPES
   void calcLifeHist( double, EventPQ &, double, boost::mt19937 & );
   double calcDeath( boost::mt19937 & );
-  void addEvent( double, int, int, EventPQ & );
-  void addEvent( double, int, int, int, EventPQ & );
+  void addEvent(double, Event::Type type, int, EventPQ &);
+  void addEvent(double, Event::Type type, int, int, EventPQ &);
   double calcFledge( boost::mt19937 & );
   double calcPairAge( boost::mt19937 & );
   int calcNumBirths( boost::mt19937 & );
