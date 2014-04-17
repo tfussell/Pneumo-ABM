@@ -645,10 +645,7 @@ void Simulation::partner2Hosts( int hid1, int hid2 ) {
 
       if ( numFamily > 1 && fledged == true ) { // New partner living independently with own family
 	// Get IDs of all people whose households need updating
-	int familyIDs[ numFamily ];
-	for ( int f = 0; f < numFamily; f++ ) {
-	  familyIDs[ f ] = 0;
-	}
+	std::vector<int> familyIDs(numFamily, 0);
 	int indID = 0;
 	int f = 0;
 	std::pair< HostsByHH::iterator, HostsByHH::iterator > pit = allHosts.get<household>().equal_range( hhold2 );
