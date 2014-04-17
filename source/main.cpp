@@ -286,19 +286,19 @@ void printAssumptions() {
 }
 
 void printTotalTime(time_t t1, time_t t2) {
-    double ttSec = t2 - t1;
-    if(ttSec < 60) {
-        std::cout << "  Total simulation time: " << ttSec << " seconds" << std::endl;
+    auto time_difference = static_cast<int>(t2 - t1);
+    if(time_difference < 60) {
+        std::cout << "  Total simulation time: " << time_difference << " seconds" << std::endl;
     }
-    else if(ttSec < 3600) {
-        int nmin = floor(ttSec / 60.0);
-        std::cout << "  Total simulation time: " << nmin << " min " << ttSec - nmin * 60 << " seconds " << std::endl;
+    else if(time_difference < 3600) {
+        int nmin = static_cast<int>(floor(time_difference / 60.0));
+        std::cout << "  Total simulation time: " << nmin << " min " << time_difference - nmin * 60 << " seconds " << std::endl;
     }
     else {
-        int nhour = floor(ttSec / 3600.0);
-        int nmin = floor((ttSec - nhour * 3600) / 60);
-        int nsec = ttSec - nhour * 3600 - nmin * 60;
-        std::cout << "  Total simulation time: " << nhour << " h " << nmin << " m " << " s " << std::endl;
+        int nhour = static_cast<int>(floor(time_difference / 3600.0));
+        int nmin = static_cast<int>(floor((time_difference - nhour * 3600) / 60));
+        int nsec = static_cast<int>(time_difference - nhour * 3600 - nmin * 60);
+        std::cout << "  Total simulation time: " << nhour << " h " << nmin << " m " << nsec << " s " << std::endl;
     }
 }
 

@@ -54,7 +54,7 @@ public:
     int calcNumBirths(boost::mt19937 &);
     double calcBirthAge(boost::mt19937 &);
     void becomeInfected(int, double, EventPQ &, boost::mt19937 &);
-    void recover(int, double, EventPQ &);
+    void recover(int, double);
     double calcRecovery(int, double, double, boost::mt19937 &);
     double calcRecovery(int, double, Infection &, boost::mt19937 &);
     void calcSusc(double);

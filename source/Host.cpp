@@ -134,7 +134,7 @@ int Host::totStrains(void) const {
     for(int s = 0; s < INIT_NUM_STYPES; s++) {
         m += (carriageSummary[s] > 0);
     }
-    return carriage.size();
+    return static_cast<int>(carriage.size());
 }
 
 double Host::getSusc(int z) const {
@@ -172,7 +172,7 @@ void Host::calcLifeHist(double t, EventPQ &cePtr, double initAge, boost::mt19937
     DOD = ageAtDeath - initAge + t;
 
     // Set current age (in years)
-    age = floor(initAge / 365.0);
+    age = static_cast<int>(floor(initAge / 365.0));
 
     // Make birthdays
     double thisT = DOB + 365.0;
@@ -301,7 +301,7 @@ void Host::becomeInfected(int s, double currentTime, EventPQ & ce, boost::mt1993
     } // end for each strain carried
 }
 
-void Host::recover(int s, double recoverTime, EventPQ & ce) {
+void Host::recover(int s, double recoverTime) {
     immune[s]++;
     carriageSummary[s]--;
     std::pair<InfectionMap::iterator, InfectionMap::iterator> ret = carriage.equal_range(s);

@@ -80,7 +80,7 @@ Simulation::Simulation(int trt, int sid, SimPars * spPtr) {
             int rID = 0;
             HostsByID::iterator ita;
             while(a == false) {
-                rID = ceil((double)N0*r01(rng));
+                rID = static_cast<int>(ceil((double)N0*r01(rng)));
                 ita = allHosts.find(rID);
                 a = (*ita)->isAdult();
             }
@@ -150,7 +150,6 @@ void Simulation::writeDemOutput() {
     int maxAge = INIT_NUM_AGE_CATS - 1;
 
     // For 0 to max age, count ages 
-    HostsByAgeNeighborhood& sorted_index = allHosts.get<age_neighborhood_tag>();
     for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
         ageDistFile = makeBigName("age_dist_neighborhood", n);
         ageDistStream.open(ageDistFile.c_str(), std::ios::app);
@@ -173,7 +172,7 @@ void Simulation::writeDemOutput() {
         households[s] = 0;
     }
     for(auto household : allHouseholds) {
-        hhSize = sorted_index2.count(household);
+        hhSize = static_cast<int>(sorted_index2.count(household));
         if(hhSize > maxSize) {
             maxSize = hhSize;
         }
@@ -234,7 +233,7 @@ void Simulation::writeEpidOutput(void) {
         coinf[c] = 0;
         coinfHflu[c] = 0;
     }
-    int id, hhold, thisC;
+    int thisC;
     auto pit = allHosts.get<carriage_tag>().equal_range(true);
     for(auto fit = pit.first; fit != pit.second; fit++) {
         if((*fit)->isInfectedPneumo()) {
@@ -482,7 +481,7 @@ void Simulation::killHost(int id) {
     HostsByID::iterator it = allHosts.find(id);
     // If only member of household, remove household from allHouseholds
     int hid = (*it)->getHousehold();
-    int hsize = allHosts.get<household_tag>().count(hid);
+    auto hsize = allHosts.get<household_tag>().count(hid);
     if(hsize == 1) {
         allHouseholds.erase(hid);
     }
@@ -534,14 +533,14 @@ void Simulation::pairHost(int id) {
         bool foundPartner = false;
         while(count == 0 && attempts < DATE_BUFFER) { // First attempt to find partner in preferred age range
             partnerAge = calcPartnerAge(thisAge);
-            count = allHosts.get<eligible_age_household_tag>().count(boost::make_tuple(partnerAge, true));
-            famCount = allHosts.get<eligible_age_household_tag>().count(boost::make_tuple(partnerAge, true, hhold1));
+            count = static_cast<int>(allHosts.get<eligible_age_household_tag>().count(boost::make_tuple(partnerAge, true)));
+            famCount = static_cast<int>(allHosts.get<eligible_age_household_tag>().count(boost::make_tuple(partnerAge, true, hhold1)));
             if(count == 0 || famCount == count) {
                 attempts++;
             }
             else {
                 while(hhold1 == hhold2 && attempts < DATE_BUFFER) {
-                    rInd = ceil((double)count * r01(rng));
+                    rInd = static_cast<int>(ceil((double)count * r01(rng)));
                     auto pit = allHosts.get<eligible_age_household_tag>().equal_range(boost::make_tuple(partnerAge, true));
                     auto partnerIt = pit.first;
                     for(int i = 1; i < rInd; i++) {
@@ -559,15 +558,15 @@ void Simulation::pairHost(int id) {
 
         // If no one found, search outside original range
         if(foundPartner == false) {
-            count = allHosts.get<eligible_household_tag>().count(boost::make_tuple(true));
-            int famCount = allHosts.get<eligible_household_tag>().count(boost::make_tuple(true, hhold1));
+            count = static_cast<int>(allHosts.get<eligible_household_tag>().count(boost::make_tuple(true)));
+            int famCount = static_cast<int>(allHosts.get<eligible_household_tag>().count(boost::make_tuple(true, hhold1)));
             attempts = 0;
             hhold2 = hhold1;
 
             // Check if there are any not in household
             if(count - famCount > 0) {
                 while(hhold1 == hhold2) {
-                    rInd = ceil((double)count * r01(rng));
+                    rInd = static_cast<int>(ceil((double)count * r01(rng)));
                     auto pit = allHosts.get<eligible_household_tag>().equal_range(boost::make_tuple(true));
                     auto partnerIt = pit.first;
                     for(int i = 1; i < rInd; i++) {
@@ -596,13 +595,12 @@ void Simulation::partner2Hosts(int hid1, int hid2) {
     allHosts.modify(it1, [=](boost::shared_ptr<Host> h) { h->setPartner(hid2); }); // Partner host
     HostsByID::iterator it2 = allHosts.find(hid2); // Partner host
     int hhold2 = (*it2)->getHousehold();
-    int nhood2 = (*it2)->getNeighborhood();
     allHosts.modify(it2, [=](boost::shared_ptr<Host> h) { h->setPartner(hid1); });
 
     // Check if initiating host still lives at home. If so, fledge and give new household & neighborhood.
     if((*it1)->hasFledged() == false) {
         allHosts.modify(it1, [](boost::shared_ptr<Host> h) { h->setFledge(true); });
-        int famSize = allHosts.get<household_tag>().count(hhold1);
+        int famSize = static_cast<int>(allHosts.get<household_tag>().count(hhold1));
         if(famSize != 1) {
             allHosts.modify(it1, [=](boost::shared_ptr<Host> h) { h->setHousehold(hholdCtr); });
             int randNeighborhood = (int)(floor((double)NUM_NEIGHBORHOODS*r01(rng)));
@@ -624,7 +622,7 @@ void Simulation::partner2Hosts(int hid1, int hid2) {
     }
 
     // Update household of partner and partner's kids, if any
-    int numFamily = allHosts.get<household_tag>().count(hhold2);
+    int numFamily = static_cast<int>(allHosts.get<household_tag>().count(hhold2));
     bool fledged = (*it2)->hasFledged();
 
     // Remove household2 from master list of households, IF host lives alone or has fledged
@@ -685,7 +683,7 @@ int Simulation::calcPartnerAge(int a) {
         rand_offset = r01(rng) * 2.0 * STD_AGE_PAIR - STD_AGE_PAIR;
         partnerAge = a + rand_offset;
     }
-    return floor(partnerAge);
+    return static_cast<int>(floor(partnerAge));
 }
 
 void Simulation::fledgeHost(int id) {
@@ -694,7 +692,7 @@ void Simulation::fledgeHost(int id) {
         // First consider case of orphan living alone - no new household needed
         int currentHH = (*it)->getHousehold();
         int currentNhood = (*it)->getNeighborhood();
-        int hhSize = allHosts.get<household_tag>().count(currentHH);
+        int hhSize = static_cast<int>(allHosts.get<household_tag>().count(currentHH));
         if(hhSize == 1) {
             allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setFledge(true); });
         }
@@ -749,7 +747,7 @@ void Simulation::recoverHost(int id, int s) {
     if(s != HFLU_INDEX || (s == HFLU_INDEX && (*it)->isInfectedZ(s) == 1)) {
         numInfecteds[(*it)->getAgeInY()][s][(*it)->getNeighborhood()]--;
     }
-    allHosts.modify(it, [&](boost::shared_ptr<Host> h) { h->recover(s, t, currentEvents); });
+    allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->recover(s, t); });
     if((*it)->totStrains() == 0) {
         allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setInf(false); });
     }
@@ -767,7 +765,7 @@ double Simulation::calcPrev() {
     int I_total_hflu = 0;
     HostsByAge& sorted_index = allHosts.get<age_tag>();
     for(int a = 0; a < 5; a++) {
-        N_total += sorted_index.count(a);
+        N_total += static_cast<int>(sorted_index.count(a));
     }
 
     // Now count how many kids in each age group are infected -- note that not sufficient to use numInfecteds, which counts 'effective' number of infecteds 
@@ -794,7 +792,7 @@ void Simulation::calcSI() {
     int nhood = 0;
     HostsByAge& sorted_index = allHosts.get<age_tag>();
     for(int n = 0; n < INIT_NUM_AGE_CATS; n++) {
-        N_total += sorted_index.count(n);
+        N_total += static_cast<int>(sorted_index.count(n));
     }
     int I_total[INIT_NUM_STYPES];
     for(int s = 0; s < INIT_NUM_STYPES; s++) {
