@@ -1,12 +1,4 @@
-/*
-*
-* SimPars.cpp
-* Pneumo-ABM - S. Cobey
-*
-*/
-
 #include <cstdlib>
-using namespace std;
 
 #include "SimPars.h"
 #include "Parameters.h"
@@ -91,9 +83,9 @@ void SimPars::initializeDemInput() {
   // Sociodemographic data
   for ( int i = 0; i < NUM_SOCIODEM_FILES; i++ ) {
     std::ifstream thisFile;
-    thisFile.open( SOCIODEM_FILENAMES[ i ], ios::in );
+	thisFile.open(SOCIODEM_FILENAMES[i], std::ios::in);
     if ( !thisFile ) {
-      cerr << "Error reading " << SOCIODEM_FILENAMES[ i ] << " file." << endl;
+		std::cerr << "Error reading " << SOCIODEM_FILENAMES[i] << " file." << std::endl;
       exit(1);
     }
     double currentMax = 0.0;
@@ -114,18 +106,18 @@ void SimPars::initializeDemInput() {
       }
     }
     if ( cumulativeSum != 1.0 ) {
-      cout << "Cumulative sum of " << SOCIODEM_FILENAMES[ i ] << " is " << cumulativeSum << ", not 1. ";
+		std::cout << "Cumulative sum of " << SOCIODEM_FILENAMES[i] << " is " << cumulativeSum << ", not 1. ";
       double diff = 1.0-cumulativeSum;
       if ( abs(diff) < ERR_EPSILON ) {
 	if ( diff > 0 ) {
-	  cout << "Adding difference (" << diff << ") to highest rate." << endl;
+		std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
 	  demPMFs[ i ][ maxIndex ] += diff;
 	} else {
-	  cout << "Adding difference (" << diff << ") to highest rate." << endl;
+		std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
 	  demPMFs[ i ][ maxIndex ] += diff;
 	}
       } else { 
-	cout << "Difference (" << diff << ") is too great (max acceptable is " << ERR_EPSILON << "). Fix the input file." << endl;
+		  std::cout << "Difference (" << diff << ") is too great (max acceptable is " << ERR_EPSILON << "). Fix the input file." << std::endl;
 	exit(1);
       }
     }
@@ -134,9 +126,9 @@ void SimPars::initializeDemInput() {
 
   // WAIFW
   std::ifstream thisFile3;
-  thisFile3.open( "WAIFW.txt", ios::in );
+  thisFile3.open("WAIFW.txt", std::ios::in);
   if ( !thisFile3 ) {
-    cerr << "Error reading " << WAIFW_FILENAME << "." << endl;
+	  std::cerr << "Error reading " << WAIFW_FILENAME << "." << std::endl;
     exit(1);
   }
   double thisVal;
@@ -172,9 +164,9 @@ void SimPars::initializeDemInput() {
 
   // PARITY_PMF
   std::ifstream thisFile2;
-  thisFile2.open( PARITY_FILENAME, ios::in );
+  thisFile2.open(PARITY_FILENAME, std::ios::in);
   if ( !thisFile2 ) {
-    cerr << "Error reading " << PARITY_FILENAME << "." << endl;
+	  std::cerr << "Error reading " << PARITY_FILENAME << "." << std::endl;
     exit(1);
   }
   thisVal = 0;
@@ -196,24 +188,24 @@ void SimPars::initializeDemInput() {
   }
   double diff = 1.0-cumulativeSum;
   if ( abs(diff) >= 0 && abs(diff) < ERR_EPSILON ) {
-    cout << "Cumulative sum of " << PARITY_FILENAME << " is " << cumulativeSum << ", not 1." << endl;
+	  std::cout << "Cumulative sum of " << PARITY_FILENAME << " is " << cumulativeSum << ", not 1." << std::endl;
     if ( diff < 0 ) {
-      cout << "Adding difference (" << diff << ") to highest rate." << endl;
+		std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
       parity_pmf[ maxIndex ] += diff;
     } else {
-      cout << "Adding difference (" << diff << ") to highest rate." << endl;
+		std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
       parity_pmf[ maxIndex ] += diff;
     }
   } else {
-    cerr << "Difference (" << diff << ") exceeds acceptable threshold (" << ERR_EPSILON << ")." << endl;
+	  std::cerr << "Difference (" << diff << ") exceeds acceptable threshold (" << ERR_EPSILON << ")." << std::endl;
     exit(1);
   }
 
   // NEIGHBORHOODS
   std::ifstream thisFile4;
-  thisFile4.open( NEIGHBORHOOD_FILENAME, ios::in );
+  thisFile4.open(NEIGHBORHOOD_FILENAME, std::ios::in);
   if ( !thisFile4 ) {
-    cerr << "Error reading " << NEIGHBORHOOD_FILENAME << "." << endl;
+	  std::cerr << "Error reading " << NEIGHBORHOOD_FILENAME << "." << std::endl;
     exit(1);
   }
   double thisVal2;
@@ -253,9 +245,9 @@ void SimPars::initializeEpidInput() {
   // Read in files
   for ( int f = 0; f < NUM_EPID_FILES; f++ ) {
     std::ifstream thisFile;
-    thisFile.open( EPID_FILENAMES[ f ],ios::in);
+	thisFile.open(EPID_FILENAMES[f], std::ios::in);
     if ( !thisFile ) {
-      cerr << "Error reading " << EPID_FILENAMES[ f ] << " file." << endl;
+		std::cerr << "Error reading " << EPID_FILENAMES[f] << " file." << std::endl;
       exit(1);
     }
     double thisVal;
@@ -271,10 +263,10 @@ void SimPars::initializeEpidInput() {
 
   // ADD BETA
   std::ifstream betaStream;
-  string betaFilename = makeName( treatmentID, simID, "BETA");
-  betaStream.open( betaFilename.c_str(),ios::in);
+  std::string betaFilename = makeName(treatmentID, simID, "BETA");
+  betaStream.open(betaFilename.c_str(), std::ios::in);
   if ( !betaStream ) {
-    cerr << "Error reading " << betaFilename << "." << endl;
+	  std::cerr << "Error reading " << betaFilename << "." << std::endl;
     exit(1);
   }
   double betaVal = 0.0;
@@ -287,27 +279,27 @@ void SimPars::initializeEpidInput() {
     }
   }
 
-  cout << "Reading out contents of serotypePars: " << endl;
+  std::cout << "Reading out contents of serotypePars: " << std::endl;
   for ( int i = 0; i < NUM_EPID_FILES+1; i++ ) {
     if ( i < NUM_EPID_FILES ) {
-      cout << EPID_FILENAMES[ i ] << "\t" ;
+		std::cout << EPID_FILENAMES[i] << "\t";
     } else {
-      cout << "BETA " << "\t";
+		std::cout << "BETA " << "\t";
     }
     for ( int j = 0; j < INIT_NUM_STYPES; j++ ) {
-      cout << serotypePars[i][j] << "\t" ;
+		std::cout << serotypePars[i][j] << "\t";
     }
-    cout << endl;
+	std::cout << std::endl;
   }
-  cout << endl;
+  std::cout << std::endl;
 
 
   // XI
   std::ifstream thisFile;
-  string XIFile = makeName( treatmentID, simID, "XI" );
-  thisFile.open( XIFile.c_str(),ios::in );
+  std::string XIFile = makeName(treatmentID, simID, "XI");
+  thisFile.open(XIFile.c_str(), std::ios::in);
   if ( !thisFile ) {
-    cerr << "Error reading " << XIFile << "." << endl;
+	  std::cerr << "Error reading " << XIFile << "." << std::endl;
     exit(1);
   }
   double thisVal;
@@ -329,9 +321,9 @@ void SimPars::initializeEpidInput() {
 
   // HFLU_PROBS
   std::ifstream hfStream;
-  hfStream.open( HFPROB_FILENAME, ios::in );
+  hfStream.open(HFPROB_FILENAME, std::ios::in);
   if ( !hfStream ) {
-    cerr << "Error reading " << HFPROB_FILENAME << "." << endl;
+	  std::cerr << "Error reading " << HFPROB_FILENAME << "." << std::endl;
     exit(1);
   }
   i = 0;
@@ -360,15 +352,15 @@ void SimPars::initializeEpidInput() {
   }
 }
 
-string SimPars::d2str( double d ) {
+std::string SimPars::d2str(double d) {
   std::stringstream t;
   t << d;
   return t.str();
 }
 
-string SimPars::makeName( int treatmentIdx, int simIdx, string suffix ) {
-  string thisCtr = d2str( simIdx );
-  string thisTr = d2str( treatmentIdx );
-  string thisName = "tr_" + thisTr + "_sim_" + thisCtr + "_" + suffix;
+std::string SimPars::makeName(int treatmentIdx, int simIdx, std::string suffix) {
+	std::string thisCtr = d2str(simIdx);
+	std::string thisTr = d2str(treatmentIdx);
+	std::string thisName = "tr_" + thisTr + "_sim_" + thisCtr + "_" + suffix;
   return thisName;
 }

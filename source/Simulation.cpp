@@ -1,21 +1,12 @@
-/*
-*
-* Simulation.cpp
-* Pneumo-ABM - S. Cobey
-*
-*/
-
-#include <cstdlib>
-using namespace std;
-
-#include <iostream>
-#include <cmath>
-#include <string>
-#include <fstream>
-#include <iterator>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <iterator>
 #include <sstream>
+#include <string>
 #include <boost/random.hpp>
 
 #include "Simulation.h"
@@ -123,7 +114,7 @@ void Simulation::closeOutput() {
 void Simulation::initOutput() {
   for ( int n = 0; n < NUM_NEIGHBORHOODS; n++ ) {
     ageDistFile = makeBigName( "age_dist_neighborhood", n );
-    ageDistStream.open( ageDistFile.c_str(),ios::out );
+	ageDistStream.open(ageDistFile.c_str(), std::ios::out);
     ageDistStream.close();
   }
   hhDistFile = makeName( "hh_dist" ); 
@@ -133,18 +124,18 @@ void Simulation::initOutput() {
   coinfectionHFHistFile = makeName( "coinfection_dist_hflu-pneumo" );
   totCarriageFile = makeName( "totCarriage" );
 
-  hhDistStream.open( hhDistFile.c_str(),ios::out );
-  demTimesStream.open( demTimesFile.c_str(),ios::out );
-  epidTimesStream.open( epidTimesFile.c_str(), ios::out );
-  coinfectionHistStream.open(coinfectionHistFile.c_str(),ios::out );
-  coinfectionHFHistStream.open(coinfectionHFHistFile.c_str(),ios::out );
-  totCarriageStream.open( totCarriageFile.c_str(),ios::out );
+  hhDistStream.open(hhDistFile.c_str(), std::ios::out);
+  demTimesStream.open(demTimesFile.c_str(), std::ios::out);
+  epidTimesStream.open(epidTimesFile.c_str(), std::ios::out);
+  coinfectionHistStream.open(coinfectionHistFile.c_str(), std::ios::out);
+  coinfectionHFHistStream.open(coinfectionHFHistFile.c_str(), std::ios::out);
+  totCarriageStream.open(totCarriageFile.c_str(), std::ios::out);
 
   for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
     for ( int n = 0; n < NUM_NEIGHBORHOODS; n++ ) {
-      infectionStream.open( makeBiggerName( "infections", s, "neighborhood", n ).c_str(),ios::out);
+		infectionStream.open(makeBiggerName("infections", s, "neighborhood", n).c_str(), std::ios::out);
       infectionStream.close();
-      infectedStream.open( makeBiggerName( "infecteds", s, "neighborhood", n ).c_str(),ios::out );
+	  infectedStream.open(makeBiggerName("infecteds", s, "neighborhood", n).c_str(), std::ios::out);
       infectedStream.close();
     }
   }
@@ -161,16 +152,16 @@ void Simulation::writeDemOutput() {
   HostsByAN& sorted_index = allHosts.get<an>();
   for ( int n = 0; n < NUM_NEIGHBORHOODS; n++ ) {
     ageDistFile = makeBigName( "age_dist_neighborhood", n );
-    ageDistStream.open( ageDistFile.c_str(),ios::app);
+	ageDistStream.open(ageDistFile.c_str(), std::ios::app);
     for ( int a = 0; a < maxAge+1; a++) {
       ageDistStream << allHosts.get<an>().count( boost::make_tuple(n, a )) << "\t";
     } 
-    ageDistStream << endl;
+	ageDistStream << std::endl;
     ageDistStream.close();
   }
   
   // Update dem times
-  demTimesStream << demOutputStrobe << endl;
+  demTimesStream << demOutputStrobe << std::endl;
 
   // II. Output household distribution to file
   HostsByHH& sorted_index2 = allHosts.get<household>();
@@ -188,7 +179,7 @@ void Simulation::writeDemOutput() {
       maxSize = hhSize;
     }
     if ( hhSize > floor(0.8*(double)HHOLD_SIZE_BUFFER ) ) {
-      cout << "Set MAX_HHOLD_SIZE to be larger. Encountered household with " << hhSize << " members." << endl;
+		std::cout << "Set MAX_HHOLD_SIZE to be larger. Encountered household with " << hhSize << " members." << std::endl;
       assert( hhSize < HHOLD_SIZE_BUFFER );
     }
     households[ hhSize - 1 ]++;
@@ -196,15 +187,15 @@ void Simulation::writeDemOutput() {
   for ( int s = 0; s < HHOLD_SIZE_BUFFER; s++ ) {
     hhDistStream << households[ s ] << "\t";
   }
-  hhDistStream << endl;
+  hhDistStream << std::endl;
 }
 
 void Simulation::writeTheta( void ) {
   thetaFile = makeName( "theta" );
-  thetaStream.open( thetaFile.c_str(),ios::out);
+  thetaStream.open(thetaFile.c_str(), std::ios::out);
   for ( HostsByAge::iterator it = allHosts.get<age>().begin(); it != allHosts.get<age>().end(); it++ ) { // For each host...
     if ( (*it)->getAgeInY() < 6 ) {
-      thetaStream << t - (*it)->getDOB() << "\t" << (*it)->getSummedTheta() << endl;
+		thetaStream << t - (*it)->getDOB() << "\t" << (*it)->getSummedTheta() << std::endl;
     }
   }
   thetaStream.close();
@@ -214,17 +205,17 @@ void Simulation::writeEpidOutput( void ) {
   // I. Output infections by age to file
   for ( int n = 0; n < NUM_NEIGHBORHOODS; n++ ) { // Fix when adapt to more than one neighborhood
     for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
-      infectionStream.open( makeBiggerName( "infections", s, "neighborhood", n ).c_str(),ios::app);
+		infectionStream.open(makeBiggerName("infections", s, "neighborhood", n).c_str(), std::ios::app);
       for ( int a = 0; a < INIT_NUM_AGE_CATS; a++ ) {
 	infectionStream << numInfecteds[ a ][ s ][ n ] << "\t";
       }
-      infectionStream << endl;
+	  infectionStream << std::endl;
       infectionStream.close();
     }
   }
 
   // II. Write time file
-  epidTimesStream << epidOutputStrobe << endl;
+  epidTimesStream << epidOutputStrobe << std::endl;
 
   // III. Write infecteds by age to file for each serotype
   int actualInfecteds[ INIT_NUM_AGE_CATS ][ INIT_NUM_STYPES ][ NUM_NEIGHBORHOODS ];
@@ -274,17 +265,17 @@ void Simulation::writeEpidOutput( void ) {
     coinfectionHistStream << coinf[ c ] << "\t";
     coinfectionHFHistStream << coinfHflu[ c ] << "\t";
   }
-  coinfectionHistStream << endl;
-  coinfectionHFHistStream << endl;
-  totCarriageStream << numCarryingPneumo << endl;
+  coinfectionHistStream << std::endl;
+  coinfectionHFHistStream << std::endl;
+  totCarriageStream << numCarryingPneumo << std::endl;
 
   for ( int n = 0; n < NUM_NEIGHBORHOODS; n++ ) {
     for ( int s = 0; s < INIT_NUM_STYPES; s++ ) { 
-      infectedStream.open( makeBiggerName( "infecteds", s, "neighborhood", n ).c_str(),ios::app);
+		infectedStream.open(makeBiggerName("infecteds", s, "neighborhood", n).c_str(), std::ios::app);
       for ( int a = 0; a < INIT_NUM_AGE_CATS; a++ ) {
 	infectedStream << actualInfecteds[ a ][ s ][ n ] << "\t"; 
       }
-      infectedStream << endl;
+	  infectedStream << std::endl;
       infectedStream.close();
     }
   }
@@ -295,7 +286,7 @@ void Simulation::writeEpidOutput( void ) {
 
 void Simulation::runDemSim( void ) {
   double percentDone = 0.0;
-  cout << "  Starting demographic component with seed=" << simID << "." << endl;
+  std::cout << "  Starting demographic component with seed=" << simID << "." << std::endl;
   writeDemOutput();
   demOutputStrobe += STROBE_DEM;
   EventPQ::iterator eventIter = currentEvents.begin();
@@ -307,7 +298,7 @@ void Simulation::runDemSim( void ) {
       demOutputStrobe += STROBE_DEM;
     }
     while ( percentDone/100.0 <= t/DEM_SIM_LENGTH  ) {
-      cout << "\t" << percentDone << "% of this component complete." << endl;
+		std::cout << "\t" << percentDone << "% of this component complete." << std::endl;
       percentDone += PROGRESS_INTERVAL;
     }
     executeEvent( thisEvent );
@@ -319,15 +310,15 @@ void Simulation::runDemSim( void ) {
   // Set time to end of simulation and reset strobe to calibrate with epid strobing
   t = DEM_SIM_LENGTH;
   demComplete = t;
-  cout << "\t100% of this component complete." << endl;
+  std::cout << "\t100% of this component complete." << std::endl;
 }
  
 double Simulation::runTestEpidSim( void ) {
   if ( allHosts.size() == 0 ) {  
-    cerr << "No hosts remaining for epidemiological simulation. Cancelling." << endl;
+	  std::cerr << "No hosts remaining for epidemiological simulation. Cancelling." << std::endl;
     assert(false);
   }
-  cout << "  Entering test simulation at t="  << demComplete << "." << endl;
+  std::cout << "  Entering test simulation at t=" << demComplete << "." << std::endl;
   double percentDone = 0.0;
 
   // Initialize host population with infections
@@ -359,12 +350,12 @@ double Simulation::runTestEpidSim( void ) {
 	}
 	if ( prevYear < t ) {
 	  prevalences[ prevSamples ] = calcPrev();
-	  cout << "\tOutputting prevalence sample #" << prevSamples+1 << "; prevalence of pneumo under 5 is " << prevalences[ prevSamples ] << endl;
+	  std::cout << "\tOutputting prevalence sample #" << prevSamples + 1 << "; prevalence of pneumo under 5 is " << prevalences[prevSamples] << std::endl;
 	  prevSamples++;
 	  prevYear += 365.0;
 	}
       	while ( percentDone/100.0 <= ( t - demComplete )/TEST_EPID_SIM_LENGTH  ) {
-	  cout << "\t" << percentDone << "% of this test component complete." << endl;
+			std::cout << "\t" << percentDone << "% of this test component complete." << std::endl;
 	  percentDone += PROGRESS_INTERVAL; 
 	} 
 
@@ -378,7 +369,7 @@ double Simulation::runTestEpidSim( void ) {
       t = nextTimeStep;
       nextTimeStep += EPID_DELTA_T;
     }
-  cout << "\t100% of this test component complete." << endl;
+  std::cout << "\t100% of this test component complete." << std::endl;
   double meanPrev = 0.0;
   double sumPrev = 0.0;
   int totSamples = 0;
@@ -386,17 +377,17 @@ double Simulation::runTestEpidSim( void ) {
     sumPrev += prevalences[ p ];
     totSamples++;
   }
-  cout << "Counted " << totSamples << " total prevalence samples." << endl;
+  std::cout << "Counted " << totSamples << " total prevalence samples." << std::endl;
   meanPrev = sumPrev/(double)totSamples;
   return( meanPrev );
 }
 
 void Simulation::runEpidSim( void ) {
   if ( allHosts.size() == 0 ) {  
-    cerr << "No hosts remaining for epidemiological simulation. Cancelling." << endl;
+	  std::cerr << "No hosts remaining for epidemiological simulation. Cancelling." << std::endl;
     assert(false);
   }
-  cout << "  Entering epidemiological simulation at t="  << demComplete << "." << endl;
+  std::cout << "  Entering epidemiological simulation at t=" << demComplete << "." << std::endl;
   double percentDone = 0.0;
 
   // Initialize host population with infections
@@ -421,7 +412,7 @@ void Simulation::runEpidSim( void ) {
 	  epidOutputStrobe += STROBE_EPID;
 	}
       	while ( percentDone/100.0 < ( t - demComplete )/EPID_SIM_LENGTH  ) {
-	  cout << "\t" << percentDone << "% of this component complete." << endl;
+			std::cout << "\t" << percentDone << "% of this component complete." << std::endl;
 	  percentDone += PROGRESS_INTERVAL; 
 	  } 
 	Event thisEvent = *eventIter;
@@ -434,9 +425,9 @@ void Simulation::runEpidSim( void ) {
       t = nextTimeStep;
       nextTimeStep += EPID_DELTA_T;
     }
-  cout << "\t100% of this component complete." << endl;
+  std::cout << "\t100% of this component complete." << std::endl;
   writeTheta();
-  cout << "  At end of simulation, " << allHosts.size() << " hosts and " << allHouseholds.size() << " households; cumulatively, " << idCtr-1 << " hosts and " << hholdCtr-1 << " households. " << eventCtr << " total events." << endl;
+  std::cout << "  At end of simulation, " << allHosts.size() << " hosts and " << allHouseholds.size() << " households; cumulatively, " << idCtr - 1 << " hosts and " << hholdCtr - 1 << " households. " << eventCtr << " total events." << std::endl;
 }
 
 
@@ -468,7 +459,7 @@ void Simulation::executeEvent( Event & te ) {
     vaccinateHost( te.hostID );
     break;
   default :
-    cerr << "Event ID " << te.eventID << " attempted and failed." << endl;
+	  std::cerr << "Event ID " << te.eventID << " attempted and failed." << std::endl;
     assert(false);
   } 
 }
@@ -790,8 +781,8 @@ double Simulation::calcPrev() {
     }
   } // end for each host
 
-  cout << "\tThere are " << N_total << " kids <5 y old; " << I_total_pneumo << " (" << 100.0*(double)I_total_pneumo/(double)N_total << "%) carry pneumo and " 
-       << I_total_hflu << " (" << 100.0*(double)I_total_hflu/(double)N_total << "%) carry Hflu" << endl;
+  std::cout << "\tThere are " << N_total << " kids <5 y old; " << I_total_pneumo << " (" << 100.0*(double)I_total_pneumo / (double)N_total << "%) carry pneumo and "
+	  << I_total_hflu << " (" << 100.0*(double)I_total_hflu / (double)N_total << "%) carry Hflu" << std::endl;
   return (  (double)I_total_pneumo/(double)N_total );
 }
 
@@ -825,7 +816,7 @@ void Simulation::calcSI() {
       if ( r01(rng) < prInf ) {
 	infectionTime = (double)r01(rng) * (double)EPID_DELTA_T + (double)t;
 	if ( infectionTime <= t ) {
-		cout << "\tAdding epsilon to event time." << endl;
+		std::cout << "\tAdding epsilon to event time." << std::endl;
 		infectionTime += pow(10,APPROX_NOW); 
 	}
 	if ( infectionTime < (*it)->getDOD() ) {
@@ -1129,33 +1120,33 @@ void Simulation::calcSI() {
 #endif
 }
 
-string Simulation::d2str( double d ) {
+std::string Simulation::d2str(double d) {
   std::stringstream t;
   t << d;
   return t.str();
 }
 
-string Simulation::makeName( string suffix ) {
-  string thisCtr = d2str( simID );
-  string thisTr = d2str( treatment );
-  string thisName = "tr_" + thisTr + "_sim_" + thisCtr + "_" + suffix;
+std::string Simulation::makeName(std::string suffix) {
+	std::string thisCtr = d2str(simID);
+	std::string thisTr = d2str(treatment);
+	std::string thisName = "tr_" + thisTr + "_sim_" + thisCtr + "_" + suffix;
   return thisName;
 }
 
-string Simulation::makeBigName( string suffix, int index ) {
-  string thisName = "tr_" + d2str( treatment ) + "_sim_" + d2str( simID ) + "_" + suffix + "_" + d2str(index);
+std::string Simulation::makeBigName(std::string suffix, int index) {
+	std::string thisName = "tr_" + d2str(treatment) + "_sim_" + d2str(simID) + "_" + suffix + "_" + d2str(index);
   return thisName;
 }
 
-string Simulation::makeBiggerName( string suffix1, int index1, string suffix2, int index2 ) {
-  string thisName = "tr_" + d2str( treatment ) + "_sim_" + d2str( simID ) + "_" + suffix1 + "_" + d2str(index1) + "_" + suffix2 + "_" + d2str(index2);
+std::string Simulation::makeBiggerName(std::string suffix1, int index1, std::string suffix2, int index2) {
+	std::string thisName = "tr_" + d2str(treatment) + "_sim_" + d2str(simID) + "_" + suffix1 + "_" + d2str(index1) + "_" + suffix2 + "_" + d2str(index2);
   return thisName;
 }
 
 void Simulation::addEvent( double et, int eid, int hid, int s ) {
   while ( currentEvents.find( Event(et) ) != currentEvents.end() ) {
     et += pow(10,APPROX_NOW);
-    cout << "\tSimulation is adjusting event time to prevent collision (host id " << hid << ", event id " << eid << ", strain " << s << ", event time " << et << ").\n";
+	std::cout << "\tSimulation is adjusting event time to prevent collision (host id " << hid << ", event id " << eid << ", strain " << s << ", event time " << et << ").\n";
   }
   Event thisEvent( et, eid, hid, s ); 
   currentEvents.insert( thisEvent );

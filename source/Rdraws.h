@@ -1,12 +1,4 @@
-/* 
-*
-* Rdraws.h
-* Pneumo-ABM - S. Cobey
-*
-*/
-
-#ifndef RDRAWS
-#define RDRAWS
+#pragma once
 
 #include <boost/random.hpp>
 
@@ -18,5 +10,3 @@ int rmultinom( const double[], int, boost::mt19937& );
 double rnorm( double, double, boost::mt19937& );
 double rgamma( double, double, boost::mt19937& );
 double rexp( double, boost::mt19937& );
-
-#endif

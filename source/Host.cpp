@@ -1,18 +1,10 @@
-/*
-*
-* Host.cpp
-* Pneumo-ABM - S. Cobey
-*
-*/
-
+#include <cmath>
 #include <cstdlib>
-using namespace std;
 #include <iostream>
 #include <queue>
 #include <vector>
 #include <boost/unordered_map.hpp>
 #include <boost/random.hpp>
-#include <cmath>
 
 #include "Event.h"
 #include "Host.h"
@@ -80,7 +72,7 @@ void Host::setInf( bool b ) {
 void Host::getVaccinated( void ) {
   for ( int s = 0; s < NUM_VACCINE_SEROTYPES; s++ ) {
     int thisSerotype = VACCINE_SEROTYPES[ s ];
-    susc[thisSerotype] = min( susc[thisSerotype], 1.0-VACCINE_EFFICACY);
+    susc[thisSerotype] = std::min(susc[thisSerotype], 1.0 - VACCINE_EFFICACY);
   }
 }
 
@@ -276,7 +268,7 @@ void Host::becomeInfected( int s, double currentTime, EventPQ & ce, boost::mt199
 	  newRecTime = currentTime + calcRecovery( s, currentTime, infTime, rng );
 	} // end for pneumo and hflu colonization options
 	while ( ce.count( Event(newRecTime) ) == 1 ) { 
-	  cout << "\tHost id " << id << " is adjusting new recovery time to strain " << s << " to avoid collision with pre-existing events." << endl;
+        std::cout << "\tHost id " << id << " is adjusting new recovery time to strain " << s << " to avoid collision with pre-existing events." << std::endl;
 	  newRecTime += pow(10,APPROX_NOW);
 	}
 	(iter->second).recT = newRecTime;
@@ -309,7 +301,7 @@ void Host::becomeInfected( int s, double currentTime, EventPQ & ce, boost::mt199
 void Host::recover( int s, double recoverTime, EventPQ & ce ) {
   immune[ s ]++;
   carriageSummary[ s ]--;
-  pair<InfectionMap::iterator,InfectionMap::iterator> ret = carriage.equal_range( s );
+  std::pair<InfectionMap::iterator, InfectionMap::iterator> ret = carriage.equal_range(s);
   InfectionMap::iterator it;
   for ( it = ret.first; it != ret.second; it++ ) {
     if ( ((*it).second).recT == recoverTime ) {
@@ -335,7 +327,7 @@ double Host::calcRecovery( int s, double currentTime, double infectionTime, boos
     }
     effectiveMean = BASE_DURATION + ( simParsPtr->get_serotypePar_ij( MEAN_DURATION_INDEX, s ) - BASE_DURATION ) * exp( -REC_EPS * pastInfections );
     double rt = rexp( effectiveMean, rng );     // pulls duration from exponential distribution given effective mean
-    return max( EPSILON*r01(rng), rt - ( currentTime - infectionTime ) );     // returns the amount of time left in infection
+    return std::max(EPSILON*r01(rng), rt - (currentTime - infectionTime));     // returns the amount of time left in infection
 }
 
 double Host::calcRecovery( int s, double currentTime, Infection & thisInf, boost::mt19937& rng ) {
@@ -355,13 +347,13 @@ void Host::calcSusc( double t ) {
     for ( int z = 0; z < HFLU_INDEX; z++ ) {
       runSum += simParsPtr->get_XI_ij(s,z)*(double)( immune[z]>0 ); // contribution of past infections
       if ( isInfectedZ(z) > 0 ) {
-	maxReduction = max( maxReduction, simParsPtr->get_reductions(z)); // contribution of current carriage
+          maxReduction = std::max(maxReduction, simParsPtr->get_reductions(z)); // contribution of current carriage
       }
     }
     if ( (t - DOB >= VACCINE_AGE) && (t >= DEM_SIM_LENGTH + VACCINATION_START) && ( IN_VACCINE[s] == 1 ) ) { // host vaccinated
-      susc[ s ] = min( 1.0-VACCINE_EFFICACY, 1.0-min(1.0,runSum) );
+        susc[s] = std::min(1.0 - VACCINE_EFFICACY, 1.0 - std::min(1.0, runSum));
     } else { // host not yet vaccinated
-      susc[ s ] = 1.0 - min(1.0,runSum);
+        susc[s] = 1.0 - std::min(1.0, runSum);
     }
     susc[ s ] *= ( 1.0 - maxReduction );
   } // end for each serotype
@@ -384,7 +376,7 @@ void Host::calcSusc( double t ) {
 #endif
 
   // For Hflu
-  susc[ HFLU_INDEX ] = 1.0 - min(1.0,simParsPtr->get_XI_ij(HFLU_INDEX,HFLU_INDEX)*(double)(immune[ HFLU_INDEX ]>0));
+  susc[HFLU_INDEX] = 1.0 - std::min(1.0, simParsPtr->get_XI_ij(HFLU_INDEX, HFLU_INDEX)*(double)(immune[HFLU_INDEX]>0));
   if ( isInfectedHflu() ) {
     susc[ HFLU_INDEX ] *= ( 1.0 - RSCC_HFLU );
   }

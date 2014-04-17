@@ -1,15 +1,7 @@
-/*
-* 
-* Rdraws.cpp
-* Pneumo-ABM - S. Cobey
-*
-*/
-
+#include <cassert>
 #include <cstdlib>
-using namespace std;
 #include <cmath>
 #include <iostream>
-#include <cassert>
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/gamma_distribution.hpp>

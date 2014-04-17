@@ -1,12 +1,4 @@
-/*
-*
-* Event.h
-* Pneumo-ABM - S. Cobey
-*
-*/
-
-#ifndef EVENT_H
-#define EVENT_H
+#pragma once
 
 #include <cstdlib>
 #include <set>
@@ -39,6 +31,3 @@ Event(double t, int eid, int hid, int stype) : time(t), eventID( eid ), hostID( 
 };
 
 typedef std::multiset< Event, std::less< Event > > EventPQ;
-
-#endif
-

@@ -1,20 +1,10 @@
-/*
-*
-* Host.h
-* Pneumo-ABM - S. Cobey
-*
-*/
-
-#ifndef HOST_H
-#define HOST_H
-
+#pragma once
 
 #include "Event.h"
 #include "Infection.h"
 #include "Parameters.h"
 #include "SimPars.h"
 #include <boost/random.hpp>
-
 
 class Host
 {
@@ -87,5 +77,3 @@ class Host
   SimPars * simParsPtr;
 
 };
-
-#endif

@@ -1,13 +1,4 @@
-/*
-*
-* main.cpp
-* Pneumo-ABM - S. Cobey
-*
-*/
-
 #include <cstdlib>
-using namespace std;
-
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -28,8 +19,8 @@ void adjustTreatment( int treatmentNumber, double treatment, int simNumber );
 void initializeBeta( int treatmentNumber, double beta, int simNumber );
 void printAssumptions( void );
 double adjustBeta( double preve, double weight, double sb, int treatmentNumber, int simNumber );
-string d2str( double d );
-string makeName( int treatmentIdx, int simIdx, string suffix );
+std::string d2str(double d);
+std::string makeName(int treatmentIdx, int simIdx, std::string suffix);
 void printTotalTime( time_t t1, time_t t2 );
 
 int main()
@@ -37,10 +28,10 @@ int main()
   int treatmentNumber;
   double treatment;
   int simNumber;
-  cin >> treatmentNumber;
-  cin >> treatment;
-  cin >> simNumber;
-  cout << "Treatment number " << treatmentNumber << ", treatment value " << treatment << ", simulation number " << simNumber << endl;
+  std::cin >> treatmentNumber;
+  std::cin >> treatment;
+  std::cin >> simNumber;
+  std::cout << "Treatment number " << treatmentNumber << ", treatment value " << treatment << ", simulation number " << simNumber << std::endl;
   printAssumptions();
 
   double startingBeta;
@@ -48,9 +39,9 @@ int main()
 
   // Get beta values
   std::ifstream thisFile;
-  thisFile.open( "Betas_used.txt", ios::in );
+  thisFile.open("Betas_used.txt", std::ios::in);
   if ( !thisFile ) {
-    cerr << "Error reading Betas_used.txt." << endl;
+	  std::cerr << "Error reading Betas_used.txt." << std::endl;
     exit(1);
   }
   double thisVal;
@@ -63,9 +54,9 @@ int main()
 
   // Get corresponding treatment value (sigma)
   std::ifstream thisFileT;
-  thisFileT.open( "Treatments.txt",ios::in );
+  thisFileT.open("Treatments.txt", std::ios::in);
   if ( !thisFileT ) {
-    cerr << "Error reading Treatments.txt." << endl;
+	  std::cerr << "Error reading Treatments.txt." << std::endl;
     exit(1);
   }
   double thisValT;
@@ -83,7 +74,7 @@ int main()
   }
 
   startingBeta = betaTable[ bestTreatment ][ 1 ];
-  cout << "Best match to treatment value " << treatment << " is beta = " << startingBeta << " (associated treatment value is " << betaTable[bestTreatment][0] << ")" << endl;
+  std::cout << "Best match to treatment value " << treatment << " is beta = " << startingBeta << " (associated treatment value is " << betaTable[bestTreatment][0] << ")" << std::endl;
   initializeBeta( treatmentNumber, startingBeta, simNumber );
   adjustTreatment( treatmentNumber, treatment, simNumber );
 
@@ -151,7 +142,7 @@ int main()
 
 #else // Not trying to match prevalence
 
-  cout << "\tBeginning simulation #" << simNumber << endl;
+  std::cout << "\tBeginning simulation #" << simNumber << std::endl;
   time_t tic;
   tic = time ( NULL );
   SimPars thesePars( treatmentNumber, simNumber );
@@ -181,31 +172,31 @@ double adjustBeta( double preve, double w, double sb, int treatmentNumber, int s
     newBetas[ HFLU_INDEX ] = HFLU_BETA;
   } else {
     std::ifstream thisFile3;
-    string filename = makeName( treatmentNumber, simNumber, "BETA");
-    thisFile3.open( filename.c_str(), ios::in );
+	std::string filename = makeName(treatmentNumber, simNumber, "BETA");
+	thisFile3.open(filename.c_str(), std::ios::in);
     if ( !thisFile3 ) {
-      cerr << "Error reading " << filename << endl;
+		std::cerr << "Error reading " << filename << std::endl;
       exit(1);
     }
     double thisVal;
     int b = 0;
     while ( !thisFile3.eof() ) {
       thisFile3 >> thisVal;
-      cout << "beta=" << thisVal << ";";
+	  std::cout << "beta=" << thisVal << ";";
       if ( b < HFLU_INDEX ) {
 	newBetas[ b ] = thisVal*(1.0 - w*preve);
       } else {
 	newBetas[ b ] = HFLU_BETA;
       }
-      cout << "newBetas[" << b << "]=" << newBetas[b] << endl;   
+	  std::cout << "newBetas[" << b << "]=" << newBetas[b] << std::endl;
       b++;
     }
     thisFile3.close();
   }
 
   std::ofstream betaStream;
-  string filename2 = makeName( treatmentNumber, simNumber, "BETA");
-  betaStream.open( filename2.c_str(),ios::out );
+  std::string filename2 = makeName(treatmentNumber, simNumber, "BETA");
+  betaStream.open(filename2.c_str(), std::ios::out);
   for ( int b = 0; b < INIT_NUM_STYPES; b++ ) {
     betaStream << newBetas[ b ] << "\t";
   }
@@ -217,8 +208,8 @@ double adjustBeta( double preve, double w, double sb, int treatmentNumber, int s
 
 void initializeBeta( int treatmentNumber, double beta, int simNumber ) {
   std::ofstream betaStream;
-  string filename2 = makeName( treatmentNumber, simNumber, "BETA");
-  betaStream.open( filename2.c_str(),ios::out );
+  std::string filename2 = makeName(treatmentNumber, simNumber, "BETA");
+  betaStream.open(filename2.c_str(), std::ios::out);
   for ( int b = 0; b < HFLU_INDEX; b++ ) {
     betaStream << beta << "\t";
   }
@@ -240,13 +231,13 @@ void adjustTreatment( int treatmentNumber, double treatment, int simNumber ) {
   thisXI[ HFLU_INDEX ][ HFLU_INDEX ] = HFLU_SIGMA;
 
   std::ofstream xiStream;
-  string XIFile = makeName( treatmentNumber, simNumber, "XI" );
-  xiStream.open( XIFile.c_str(),ios::out );
+  std::string XIFile = makeName(treatmentNumber, simNumber, "XI");
+  xiStream.open(XIFile.c_str(), std::ios::out);
   for ( int i = 0; i < INIT_NUM_STYPES; i++ ) {
     for ( int j = 0; j < INIT_NUM_STYPES; j++ ) {
       xiStream << thisXI[i][j] ;
       if ( (j+1) % INIT_NUM_STYPES == 0 ) {
-	xiStream << endl;
+		  xiStream << std::endl;
       } else {
 	xiStream << "\t";
       }
@@ -255,29 +246,29 @@ void adjustTreatment( int treatmentNumber, double treatment, int simNumber ) {
   xiStream.close();
 }
 
-string d2str( double d ) {
+std::string d2str(double d) {
   std::stringstream t;
   t << d;
   return t.str();
 }
 
-string makeName( int treatmentIdx, int simIdx, string suffix ) {
-  string thisCtr = d2str( simIdx );
-  string thisTr = d2str( treatmentIdx );
-  string thisName = "tr_" + thisTr + "_sim_" + thisCtr + "_" + suffix;
+std::string makeName(int treatmentIdx, int simIdx, std::string suffix) {
+	std::string thisCtr = d2str(simIdx);
+	std::string thisTr = d2str(treatmentIdx);
+	std::string thisName = "tr_" + thisTr + "_sim_" + thisCtr + "_" + suffix;
   return thisName;
 }
 
 void printAssumptions() {
-  cout << "Model assumptions:" << endl;
+	std::cout << "Model assumptions:" << std::endl;
 #ifdef NO_HHOLDS
-  cout << "\t--no household structure" <<endl;
+	std::cout << "\t--no household structure" << std::endl;
 #else 
   cout << "\t--households present" << endl;
 #endif
 
 #ifdef NO_AGE_ASSORT
-  cout << "\t--no age-assortative mixing" << endl;
+  std::cout << "\t--no age-assortative mixing" << std::endl;
 #else
   cout << "\t--age-assortative mixing" << endl;
 #endif
@@ -285,22 +276,22 @@ void printAssumptions() {
 #ifdef MATCH_PREVALENCE
   cout << "\t--matching prevalence" << endl;
 #else
-  cout << "\t--not matching prevalence"<< endl;
+  std::cout << "\t--not matching prevalence" << std::endl;
 #endif
 }
 
 void printTotalTime( time_t t1, time_t t2 ) {
     double ttSec = t2-t1;
     if ( ttSec < 60 ) {
-      cout << "  Total simulation time: " << ttSec << " seconds" << endl;
+		std::cout << "  Total simulation time: " << ttSec << " seconds" << std::endl;
     } else if ( ttSec < 3600 ) {
       int nmin = floor(ttSec/60.0);
-      cout << "  Total simulation time: " << nmin << " min " << ttSec - nmin*60 << " seconds " << endl; 
+	  std::cout << "  Total simulation time: " << nmin << " min " << ttSec - nmin * 60 << " seconds " << std::endl;
     } else {
       int nhour = floor(ttSec/3600.0);
       int nmin = floor((ttSec - nhour*3600)/60);
       int nsec = ttSec - nhour*3600 - nmin*60;
-      cout << "  Total simulation time: " << nhour << " h " << nmin << " m " << " s " << endl;
+	  std::cout << "  Total simulation time: " << nhour << " h " << nmin << " m " << " s " << std::endl;
     }
 }
 

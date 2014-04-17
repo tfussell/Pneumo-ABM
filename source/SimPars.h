@@ -1,19 +1,11 @@
-/*
-*
-* SimPars.h
-* Pneumo-ABM - S. Cobey
-*
-*/
+#pragma once
 
-#ifndef SIMPARS_H
-#define SIMPARS_H
-
-#include <cstdlib>
-#include <iostream>
 #include <cmath>
-#include <string>
+#include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <sstream>
+#include <string>
 
 #include "Parameters.h"
 
@@ -62,8 +54,6 @@ class SimPars
   // PRIVATE FUNCTION PROTOTYPES
   void initializeDemInput();
   void initializeEpidInput();
-  string makeName( int treatmentIdx, int simIdx, string suffix );
-  string d2str( double d );
+  std::string makeName(int treatmentIdx, int simIdx, std::string suffix);
+  std::string d2str(double d);
 };
-
-#endif

@@ -1,18 +1,10 @@
-/*
-*
-* Simulation.h
-* Pneumo ABM - S. Cobey
-*
-*/
+#pragma once
 
-#ifndef SIMULATION_H
-#define SIMULATION_H
-
-#include <cstdlib>
-#include <iostream>
 #include <cmath>
-#include <string>
+#include <cstdlib>
 #include <fstream>
+#include <iostream>
+#include <string>
 #include <boost/random.hpp>
 
 #include "Parameters.h"
@@ -21,7 +13,6 @@
 #include "Rdraws.h"
 #include "Containers.h"
 #include "SimPars.h"
-
 
 class Simulation
 {
@@ -66,10 +57,10 @@ class Simulation
   void recoverHost( int id, int s );
   void vaccinateHost( int id );
   void calcSI( void );
-  string d2str( double d );
-  string makeName( string s );
-  string makeBigName( string, int );
-  string makeBiggerName( string, int, string, int);
+  std::string d2str(double d);
+  std::string makeName(std::string s);
+  std::string makeBigName(std::string, int);
+  std::string makeBiggerName(std::string, int, std::string, int);
   void addEvent( double et, int eid, int hid, int s );
   double calcPrev( void );
 
@@ -100,5 +91,3 @@ class Simulation
   std::string thetaFile;
   std::string totCarriageFile;
 };
-
-#endif

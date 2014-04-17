@@ -1,12 +1,4 @@
-/*
-*
-* Infection.h
-* Pneumo-ABM - S. Cobey
-*
-*/
-
-#ifndef INFECTION_H
-#define INFECTION_H
+#pragma once
 
 #include <cstdlib>
 #include <boost/unordered_map.hpp>
@@ -19,6 +11,3 @@ public:
 };
 
 typedef boost::unordered_multimap< int, Infection > InfectionMap;
-
-#endif
-

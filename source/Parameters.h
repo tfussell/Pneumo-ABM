@@ -1,12 +1,4 @@
-/*
-*
-* Parameters.h
-* Pneumo-ABM - S. Cobey
-*
-*/
-
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
+#pragma once
 
 #include <cmath>
 
@@ -109,5 +101,3 @@ const bool IN_VACCINE[ 25 ] = {
 	0, 0, 0, 0, 0,
 	1, 0, 0, 0, 0
 };
-
-#endif
