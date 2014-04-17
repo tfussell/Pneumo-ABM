@@ -37,7 +37,7 @@ class Simulation
   int simID;
   int eventCtr; // for memory management and debugging
   HostContainer allHosts; // shared_ptr to Hosts
-  HHSet allHouseholds; // set of household ids
+  HouseholdContainer allHouseholds; // set of household ids
   int numInfecteds[ INIT_NUM_AGE_CATS ][ INIT_NUM_STYPES ][ NUM_NEIGHBORHOODS ]; // counts number infected with each serotype by age
   EventPQ currentEvents; // current events heap
   SimPars * simParsPtr;

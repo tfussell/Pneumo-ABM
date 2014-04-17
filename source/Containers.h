@@ -20,13 +20,13 @@
 #define BOOST_MULTI_INDEX_ENABLE_SAFE_MODE
 #endif
 
-struct age{};
-struct household{};
-struct aeh{};
-struct eh{};
-struct ah{};
-struct an{};
-struct inf{};
+struct age_tag{};
+struct household_tag{};
+struct eligible_age_household_tag{};
+struct eligible_household_tag{};
+struct age_household_tag{};
+struct age_neighborhood_tag{};
+struct carriage_tag{};
 
 typedef boost::multi_index::multi_index_container<
 	boost::shared_ptr<Host>,
@@ -34,46 +34,47 @@ typedef boost::multi_index::multi_index_container<
 	    boost::multi_index::hashed_unique< // 0 - ID index
 		    boost::multi_index::const_mem_fun<Host, int, &Host::getID>>, 
 		boost::multi_index::ordered_non_unique< // 1 - Age index
-		    boost::multi_index::tag<age>,
+		    boost::multi_index::tag<age_tag>,
 			boost::multi_index::const_mem_fun<Host, int, &Host::getAgeInY>>, 
 		boost::multi_index::hashed_non_unique < // 2 - Household index
-		    boost::multi_index::tag<household>,
+		    boost::multi_index::tag<household_tag>,
 			boost::multi_index::const_mem_fun < Host, int, &Host::getHousehold >> ,
 	    boost::multi_index::ordered_non_unique< // 3 - Eligible by age & household
-		    boost::multi_index::tag<aeh>,
+		    boost::multi_index::tag<eligible_age_household_tag>,
 			boost::multi_index::composite_key <
 			    Host,
 				boost::multi_index::const_mem_fun<Host, int, &Host::getAgeInY>,
 				boost::multi_index::const_mem_fun<Host, bool, &Host::isEligible>,
 				boost::multi_index::const_mem_fun<Host, int, &Host::getHousehold>>>,
 		boost::multi_index::ordered_non_unique < // 4 - Eligible by household (all single adults)
-		    boost::multi_index::tag<eh>,
+		    boost::multi_index::tag<eligible_household_tag>,
 			boost::multi_index::composite_key <
 		        Host,
 				boost::multi_index::const_mem_fun<Host, bool, &Host::isEligible>,
 				boost::multi_index::const_mem_fun<Host, int, &Host::getHousehold >> >,
 		boost::multi_index::ordered_non_unique < // 5 - Neighborhood & age
-		    boost::multi_index::tag<an>,
+		    boost::multi_index::tag<age_neighborhood_tag>,
 			boost::multi_index::composite_key <
 		        Host,
 				boost::multi_index::const_mem_fun<Host, int, &Host::getNeighborhood>,
 				boost::multi_index::const_mem_fun<Host, int, &Host::getAgeInY >> >,
 		boost::multi_index::ordered_non_unique < // 6 - Household & age
-		    boost::multi_index::tag<ah>,
+		    boost::multi_index::tag<age_household_tag>,
 			boost::multi_index::composite_key <
 	            Host,
 				boost::multi_index::const_mem_fun<Host, int, &Host::getHousehold>,
 				boost::multi_index::const_mem_fun<Host, int, &Host::getAgeInY >> >,
 		boost::multi_index::ordered_non_unique <  // 7 - Carriage status
-	        boost::multi_index::tag<inf>,
+	        boost::multi_index::tag<carriage_tag>,
 			boost::multi_index::const_mem_fun < Host, bool, &Host::isInfected >> >> HostContainer;
 
 typedef HostContainer::nth_index<0>::type HostsByID;
 typedef HostContainer::nth_index<1>::type HostsByAge;
-typedef HostContainer::nth_index<2>::type HostsByHH;
-typedef HostContainer::nth_index<3>::type HostsByAEH;
-typedef HostContainer::nth_index<4>::type HostsByEH;
-typedef HostContainer::nth_index<5>::type HostsByAN;
-typedef HostContainer::nth_index<6>::type HostsByAH;
-typedef HostContainer::nth_index<7>::type HostsByInf;
-typedef std::set<int> HHSet;
+typedef HostContainer::nth_index<2>::type HostsByHousehold;
+typedef HostContainer::nth_index<3>::type HostsEligibleByAgeHousehold;
+typedef HostContainer::nth_index<4>::type HostsEligibleByHousehold;
+typedef HostContainer::nth_index<5>::type HostsByAgeNeighborhood;
+typedef HostContainer::nth_index<6>::type HostsByAgeHousehold;
+typedef HostContainer::nth_index<7>::type HostsByCarriage;
+
+typedef std::set<int> HouseholdContainer;
