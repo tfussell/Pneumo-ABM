@@ -165,16 +165,14 @@ void Simulation::writeDemOutput() {
 
   // II. Output household distribution to file
   HostsByHousehold& sorted_index2 = allHosts.get<household_tag>();
-  int thisHH = 0;
   int hhSize = 0;
   int maxSize = 1;
   int households[ HHOLD_SIZE_BUFFER ]; // holds counts for sizes 1...HHOLD_SIZE_BUFFER+1
   for ( int s = 0; s < HHOLD_SIZE_BUFFER; s++ ) {
     households[ s ] = 0;
   }
-  for ( HouseholdContainer::iterator hhit = allHouseholds.begin(); hhit != allHouseholds.end(); hhit++ ) {
-    thisHH = *hhit;
-    hhSize = sorted_index2.count( thisHH );
+  for(auto household : allHouseholds) {
+    hhSize = sorted_index2.count( household );
     if ( hhSize > maxSize ) {
       maxSize = hhSize;
     }
@@ -193,9 +191,9 @@ void Simulation::writeDemOutput() {
 void Simulation::writeTheta( void ) {
   thetaFile = makeName( "theta" );
   thetaStream.open(thetaFile.c_str(), std::ios::out);
-  for(HostsByAge::iterator it = allHosts.get<age_tag>().begin(); it != allHosts.get<age_tag>().end(); it++) { // For each host...
-    if ( (*it)->getAgeInY() < 6 ) {
-		thetaStream << t - (*it)->getDOB() << "\t" << (*it)->getSummedTheta() << std::endl;
+  for(auto host : allHosts.get<age_tag>()) { // For each host...
+    if (host->getAgeInY() < 6 ) {
+		thetaStream << t - host->getDOB() << "\t" << host->getSummedTheta() << std::endl;
     }
   }
   thetaStream.close();
@@ -236,8 +234,8 @@ void Simulation::writeEpidOutput( void ) {
     coinfHflu[ c ] = 0;
   }
   int id, hhold, thisC;
-  std::pair< HostsByCarriage::const_iterator, HostsByCarriage::const_iterator > pit = allHosts.get<carriage_tag>().equal_range(true);
-  for ( HostsByCarriage::const_iterator fit = pit.first; fit != pit.second; fit++ ) {
+  auto pit = allHosts.get<carriage_tag>().equal_range(true);
+  for(auto fit = pit.first; fit != pit.second; fit++ ) {
     if ( (*fit)->isInfectedPneumo() ) {
       numCarryingPneumo++;
     }
@@ -467,16 +465,15 @@ void Simulation::seedInfections( void ) {
   // Currently assuming: 
   // .... only single colonizations occur for each serotype
   // .... not considering co-colonizations when calculating duration of infection at this point
-    HostsByAge::iterator it = allHosts.get<age_tag>().begin();
-    while(it != allHosts.get<age_tag>().end()) {
+    for(auto host : allHosts.get<age_tag>())
+    {
     for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
       double thisRNG = r01(rng);
       if ( thisRNG < simParsPtr->get_serotypePar_ij( INIT_INFECTEDS_INDEX, s ) ) {
-	int id = (*it)->getID();
+	int id = host->getID();
 	infectHost( id, s );
       }
     }
-    it++;
   }
 }
 
@@ -543,8 +540,8 @@ void Simulation::pairHost( int id ) {
       } else {
 	while ( hhold1 == hhold2 && attempts < DATE_BUFFER ) {
 	  rInd = ceil( (double)count * r01(rng) );
-      std::pair< HostsEligibleByAgeHousehold::const_iterator, HostsEligibleByAgeHousehold::const_iterator > pit = allHosts.get<eligible_age_household_tag>().equal_range(boost::make_tuple(partnerAge, true));
-	  HostsEligibleByAgeHousehold::const_iterator partnerIt = pit.first;
+      auto pit = allHosts.get<eligible_age_household_tag>().equal_range(boost::make_tuple(partnerAge, true));
+	  auto partnerIt = pit.first;
 	  for ( int i = 1; i < rInd; i++ ) {
 	    partnerIt++;
 	  }
@@ -569,8 +566,8 @@ void Simulation::pairHost( int id ) {
       if ( count - famCount > 0 ) {
 	while ( hhold1 == hhold2 ) {
 	  rInd = ceil( (double)count * r01(rng) );
-      std::pair< HostsEligibleByHousehold::const_iterator, HostsEligibleByHousehold::const_iterator > pit = allHosts.get<eligible_household_tag>().equal_range(boost::make_tuple(true));
-	  HostsEligibleByHousehold::const_iterator partnerIt = pit.first;
+      auto pit = allHosts.get<eligible_household_tag>().equal_range(boost::make_tuple(true));
+	  auto partnerIt = pit.first;
 	  for ( int i = 1; i < rInd; i++ ) {
 	    partnerIt++;
 	  }
@@ -638,8 +635,8 @@ void Simulation::partner2Hosts( int hid1, int hid2 ) {
 	std::vector<int> familyIDs(numFamily, 0);
 	int indID = 0;
 	int f = 0;
-	std::pair< HostsByHousehold::iterator, HostsByHousehold::iterator > pit = allHosts.get<household_tag>().equal_range( hhold2 );
-	for ( HostsByHousehold::const_iterator fit = pit.first; fit != pit.second; fit++ ) {
+	auto pit = allHosts.get<household_tag>().equal_range( hhold2 );
+	for (auto fit = pit.first; fit != pit.second; fit++ ) {
 	  indID = (*fit )->getID();
 	  familyIDs[ f ] = indID;
 	  f++;
@@ -772,11 +769,11 @@ double Simulation::calcPrev() {
   // Now count how many kids in each age group are infected -- note that not sufficient to use numInfecteds, which counts 'effective' number of infecteds 
   // (i.e., the number of infections) for purposes of calculating the force of infection
   int hostAge = 0;
-  for ( HostsByAge::iterator it = allHosts.get<age_tag>().begin(); it != allHosts.get<age_tag>().end(); it++ ) { // For each host...
-    hostAge = (*it)->getAgeInY();
+  for (auto host :allHosts.get<age_tag>()) {
+    hostAge = host->getAgeInY();
     if ( hostAge < 5 ) {
-      I_total_pneumo += (*it)->isInfectedPneumo();
-      I_total_hflu += (*it)->isInfectedHflu();
+      I_total_pneumo += host->isInfectedPneumo();
+      I_total_hflu += host->isInfectedHflu();
     }
   } // end for each host
 
@@ -807,10 +804,10 @@ void Simulation::calcSI() {
   double prInf;
   double rTrans;
   double infectionTime;
-  for ( HostsByAge::iterator it = allHosts.get<age_tag>().begin(); it !=  allHosts.get<age_tag>().end(); it++ ) { 
+  for (auto it : allHosts.get<age_tag>()) { 
     for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
-      rTrans = simParsPtr->get_serotypePar_ij( BETA_INDEX, s ) * (double)( I_total[s] - (*it)->isInfectedZ(s) )/(double)( N_total - 1 ); // beta*I/N (excluding self)
-      prInf = (*it)->getSusc(s) * ( rTrans + simParsPtr->get_serotypePar_ij( IMMIGRATION_INDEX, s ) );
+      rTrans = simParsPtr->get_serotypePar_ij( BETA_INDEX, s ) * (double)( I_total[s] - it->isInfectedZ(s) )/(double)( N_total - 1 ); // beta*I/N (excluding self)
+      prInf = it->getSusc(s) * ( rTrans + simParsPtr->get_serotypePar_ij( IMMIGRATION_INDEX, s ) );
       prInf = 1.0 - exp( -prInf * EPID_DELTA_T ); 
       if ( r01(rng) < prInf ) {
 	infectionTime = (double)r01(rng) * (double)EPID_DELTA_T + (double)t;
@@ -818,8 +815,8 @@ void Simulation::calcSI() {
 		std::cout << "\tAdding epsilon to event time." << std::endl;
 		infectionTime += pow(10,APPROX_NOW); 
 	}
-	if ( infectionTime < (*it)->getDOD() ) {
-	  addEvent( infectionTime, Event::Type::Infection, (*it)->getID(), s );
+	if ( infectionTime < it->getDOD() ) {
+	  addEvent( infectionTime, Event::Type::Infection, it->getID(), s );
 	}
       }
     } // end for each serotype
@@ -867,13 +864,13 @@ void Simulation::calcSI() {
   double prInf;
   double rTrans;
   double infectionTime;
-  for ( HostsByAge::iterator it = allHosts.get<age>().begin(); it !=  allHosts.get<age>().end(); it++ ) { // For each host...
-    hostID = (*it)->getID();
-    hostAge = (*it)->getAgeInY();
-    nhood = (*it)->getNeighborhood();
+  for (auto host : allHosts.get<age>()) {
+    hostID = host->getID();
+    hostAge = host->getAgeInY();
+    nhood = host->getNeighborhood();
     for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
-      susc_z = (*it)->getSusc(s);
-      numInfectionsZ = (*it)->isInfectedZ(s);
+        susc_z = host->getSusc(s);
+        numInfectionsZ = host->isInfectedZ(s);
       rTrans = 0.0;
       for ( int a = 0; a < INIT_NUM_AGE_CATS; a++ ) {
 	if ( a != hostAge && N_age[a] > 0 ) {
@@ -888,11 +885,11 @@ void Simulation::calcSI() {
       if ( r01(rng) < prInf ) {
 	infectionTime = r01(rng) * EPID_DELTA_T + t;
 	if ( infectionTime <= t ) {
-		cout << "\tAdding epsilon to event time." << endl;
+		std::cout << "\tAdding epsilon to event time." << std::endl;
 		infectionTime += pow(10,APPROX_NOW); 
 	}
-	if ( infectionTime < (*it)->getDOD() ) {
-	  addEvent( infectionTime, INFECTION_EVENT, hostID, s );
+    if ( infectionTime < host->getDOD() ) {
+	  addEvent( infectionTime, Event::Type::Infection, hostID, s );
 	}
       }
     } // end for each serotype
@@ -927,10 +924,10 @@ void Simulation::calcSI() {
   double rTrans;
   double infectionTime;
   double n_weight;
-  for ( HostsByAge::iterator it = allHosts.get<age>().begin(); it !=  allHosts.get<age>().end(); it++ ) {
-    hostID = (*it)->getID();
-    hostHhold = (*it)->getHousehold();
-    hostNhood = (*it)->getNeighborhood();
+  for (auto host : allHosts.get<age>()) {
+      hostID = host->getID();
+      hostHhold = host->getHousehold();
+      hostNhood = host->getNeighborhood();
     hholdSize = allHosts.get<household>().count( hostHhold ) - 1; // do not count self in household 
 
     for ( int s = 0; s < INIT_NUM_STYPES; s++ ) {
@@ -940,8 +937,8 @@ void Simulation::calcSI() {
       rTrans = 0.0;
 
       if ( hholdSize > 0 ) {  
-	std::pair< HostsByHousehold::iterator, HostsByHousehold::iterator > pit = allHosts.get<household>().equal_range( hostHhold ); 
-	for ( HostsByHousehold::iterator fit = pit.first; fit != pit.second; fit++ ) {
+	auto pit = allHosts.get<household>().equal_range( hostHhold ); 
+	for (auto fit = pit.first; fit != pit.second; fit++ ) {
 	  numHholdInfecteds += (*fit)->isInfectedZ(s); // adding self in numerator (easier than checking family members' IDs)
 	} // end for each host in household
  	rTrans += RHO_H * simParsPtr->get_serotypePar_ij( BETA_INDEX, s ) * (double)( numHholdInfecteds - numInfectionsZ )/(double)hholdSize; // not counting self in denominator
@@ -1039,11 +1036,11 @@ void Simulation::calcSI() {
   double infectionTime;
   double sumAlphas;
   int hholdAges[ INIT_NUM_AGE_CATS ];
-  for ( HostsByAge::iterator it = allHosts.get<age>().begin(); it !=  allHosts.get<age>().end(); it++ ) { // For each host...
-    hostID = (*it)->getID();
-    hostHhold = (*it)->getHousehold();
-    hostNhood = (*it)->getNeighborhood();
-    hostAge = (*it)->getAgeInY();
+  for (auto host : allHosts.get<age>()) {
+      hostID = host->getID();
+      hostHhold = host->getHousehold();
+      hostNhood = host->getNeighborhood();
+      hostAge = host->getAgeInY();
     hholdSize = allHosts.get<household>().count( hostHhold ) - 1; // do not count self in household
     sumAlphas = 0.0;
     for ( int a = 0; a < INIT_NUM_AGE_CATS; a++ ) {
@@ -1054,8 +1051,8 @@ void Simulation::calcSI() {
     // Update alpha_hh vector for household members
     if ( hholdSize > 0 ) {
       for ( int a = 0; a < INIT_NUM_AGE_CATS; a++ ) { // ...for each age 
-	std::pair< HostsByAH::iterator, HostsByAH::iterator > pit = allHosts.get<ah>().equal_range( boost::make_tuple( hostHhold, a ) );
-	for ( HostsByAH::iterator fit = pit.first; fit != pit.second; fit++ ) {
+	auto pit = allHosts.get<ah>().equal_range( boost::make_tuple( hostHhold, a ) );
+	for (auto fit = pit.first; fit != pit.second; fit++ ) {
 	  if ( (*fit )->getID() != hostID ) {
 	    hholdAges[ a ]++;
 	  }
@@ -1080,8 +1077,8 @@ void Simulation::calcSI() {
       for ( int a = 0; a < INIT_NUM_AGE_CATS; a++ ) {
 	numHholdInfecteds = 0;
 	if ( hholdSize > 0 ) {
-	  std::pair< HostsByAH::iterator, HostsByAH::iterator > pit = allHosts.get<ah>().equal_range( boost::make_tuple( hostHhold, a ) );
-	  for ( HostsByAH::iterator fit = pit.first; fit != pit.second; fit++ ) {
+	  auto pit = allHosts.get<ah>().equal_range( boost::make_tuple( hostHhold, a ) );
+	  for (auto fit = pit.first; fit != pit.second; fit++ ) {
 	    numHholdInfecteds += (*fit)->isInfectedZ(s); // note that this number includes the host
 	  } // end for all hosts in household of this age
 	  if ( hholdAges[ a ] > 0 && a == hostAge ) { // Calculate household transmission for this age
