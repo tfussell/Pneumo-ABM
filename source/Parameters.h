@@ -11,6 +11,8 @@
 #define NO_AGE_ASSORT // if defined, contact rates are independent of host age
 #define SIM_PCV // if on, introduces vaccine
 
+const int MAX_MATCH_ATTEMPTS = 1;
+
 // SIMULATION PARAMETERS
 // ...input:
 const double DEM_SIM_LENGTH = (double)300 * 365.0; // period of demographic burn-in (no epid dynamics); should be a multiple of strobing interval

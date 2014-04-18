@@ -33,7 +33,7 @@ const double SimPars::get_waifw_ij(int i, int j) const {
     return normWAIFW[i][j];
 }
 
-const kids_index& SimPars::get_parity(void) const {
+const kids_index& SimPars::get_parity() const {
     return parity_pmf;
 }
 
@@ -83,7 +83,7 @@ void SimPars::initializeDemInput() {
     // Sociodemographic data
     for(int i = 0; i < NUM_SOCIODEM_FILES; i++) {
         std::ifstream thisFile;
-        thisFile.open(SOCIODEM_FILENAMES[i], std::ios::in);
+        thisFile.open("../../inputs/" + std::string(SOCIODEM_FILENAMES[i]), std::ios::in);
         if(!thisFile) {
             std::cerr << "Error reading " << SOCIODEM_FILENAMES[i] << " file." << std::endl;
             exit(1);
@@ -128,7 +128,7 @@ void SimPars::initializeDemInput() {
 
     // WAIFW
     std::ifstream thisFile3;
-    thisFile3.open("WAIFW.txt", std::ios::in);
+    thisFile3.open("../../inputs/WAIFW.txt", std::ios::in);
     if(!thisFile3) {
         std::cerr << "Error reading " << WAIFW_FILENAME << "." << std::endl;
         exit(1);
@@ -166,7 +166,7 @@ void SimPars::initializeDemInput() {
 
     // PARITY_PMF
     std::ifstream thisFile2;
-    thisFile2.open(PARITY_FILENAME, std::ios::in);
+    thisFile2.open("../../inputs/" + std::string(PARITY_FILENAME), std::ios::in);
     if(!thisFile2) {
         std::cerr << "Error reading " << PARITY_FILENAME << "." << std::endl;
         exit(1);
@@ -207,7 +207,7 @@ void SimPars::initializeDemInput() {
 
     // NEIGHBORHOODS
     std::ifstream thisFile4;
-    thisFile4.open(NEIGHBORHOOD_FILENAME, std::ios::in);
+    thisFile4.open("../../inputs/" + std::string(NEIGHBORHOOD_FILENAME), std::ios::in);
     if(!thisFile4) {
         std::cerr << "Error reading " << NEIGHBORHOOD_FILENAME << "." << std::endl;
         exit(1);
@@ -249,7 +249,7 @@ void SimPars::initializeEpidInput() {
     // Read in files
     for(int f = 0; f < NUM_EPID_FILES; f++) {
         std::ifstream thisFile;
-        thisFile.open(EPID_FILENAMES[f], std::ios::in);
+        thisFile.open("../../inputs/" + std::string(EPID_FILENAMES[f]), std::ios::in);
         if(!thisFile) {
             std::cerr << "Error reading " << EPID_FILENAMES[f] << " file." << std::endl;
             exit(1);
@@ -268,7 +268,7 @@ void SimPars::initializeEpidInput() {
     // ADD BETA
     std::ifstream betaStream;
     std::string betaFilename = makeName(treatmentID, simID, "BETA");
-    betaStream.open(betaFilename.c_str(), std::ios::in);
+    betaStream.open("../../outputs/" + betaFilename, std::ios::in);
     if(!betaStream) {
         std::cerr << "Error reading " << betaFilename << "." << std::endl;
         exit(1);
@@ -302,7 +302,7 @@ void SimPars::initializeEpidInput() {
     // XI
     std::ifstream thisFile;
     std::string XIFile = makeName(treatmentID, simID, "XI");
-    thisFile.open(XIFile.c_str(), std::ios::in);
+    thisFile.open("../../outputs/" + XIFile, std::ios::in);
     if(!thisFile) {
         std::cerr << "Error reading " << XIFile << "." << std::endl;
         exit(1);
@@ -326,7 +326,7 @@ void SimPars::initializeEpidInput() {
 
     // HFLU_PROBS
     std::ifstream hfStream;
-    hfStream.open(HFPROB_FILENAME, std::ios::in);
+    hfStream.open("../../inputs/" + std::string(HFPROB_FILENAME), std::ios::in);
     if(!hfStream) {
         std::cerr << "Error reading " << HFPROB_FILENAME << "." << std::endl;
         exit(1);

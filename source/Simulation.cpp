@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -18,7 +19,7 @@
 
 #define HFLU_INDEX (INIT_NUM_STYPES-1)
 
-Simulation::Simulation(int trt, int sid, SimPars * spPtr) {
+Simulation::Simulation(int trt, int sid, SimPars * spPtr) : numInfecteds() {
     simID = sid;
     treatment = trt;
     simParsPtr = spPtr;
@@ -27,24 +28,13 @@ Simulation::Simulation(int trt, int sid, SimPars * spPtr) {
     eventCtr = 0;
     idCtr = 1;
     hholdCtr = 1;
-    numInfecteds[INIT_NUM_AGE_CATS][INIT_NUM_STYPES][NUM_NEIGHBORHOODS];
     demComplete = 0.0;
     rng.seed((unsigned int)sid);
-    for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
-            for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
-                numInfecteds[a][s][n] = 0;
-            }
-        }
-    }
 
     // Set up multinomial to determine # of households in each size category
     // and # of people in each age class
-    int init_age_dist[INIT_NUM_AGE_CATS];
-    for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
-        init_age_dist[a] = 0;
-    }
-    rmultinom(simParsPtr->get_demPMF_row(INIT_AGE_INDEX), N0, INIT_NUM_AGE_CATS, init_age_dist, rng);
+    std::array<int, INIT_NUM_AGE_CATS> init_age_dist = {0};
+    rmultinom(simParsPtr->get_demPMF_row(INIT_AGE_INDEX), N0, INIT_NUM_AGE_CATS, init_age_dist.data(), rng);
 
     // Create hosts
     double thisAge;
@@ -115,7 +105,7 @@ void Simulation::closeOutput() {
 void Simulation::initOutput() {
     for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
         ageDistFile = makeBigName("age_dist_neighborhood", n);
-        ageDistStream.open(ageDistFile.c_str(), std::ios::out);
+        ageDistStream.open("../../outputs/" + ageDistFile, std::ios::out);
         ageDistStream.close();
     }
     hhDistFile = makeName("hh_dist");
@@ -125,18 +115,18 @@ void Simulation::initOutput() {
     coinfectionHFHistFile = makeName("coinfection_dist_hflu-pneumo");
     totCarriageFile = makeName("totCarriage");
 
-    hhDistStream.open(hhDistFile.c_str(), std::ios::out);
-    demTimesStream.open(demTimesFile.c_str(), std::ios::out);
-    epidTimesStream.open(epidTimesFile.c_str(), std::ios::out);
-    coinfectionHistStream.open(coinfectionHistFile.c_str(), std::ios::out);
-    coinfectionHFHistStream.open(coinfectionHFHistFile.c_str(), std::ios::out);
-    totCarriageStream.open(totCarriageFile.c_str(), std::ios::out);
+    hhDistStream.open("../../outputs/" + hhDistFile, std::ios::out);
+    demTimesStream.open("../../outputs/" + demTimesFile, std::ios::out);
+    epidTimesStream.open("../../outputs/" + epidTimesFile, std::ios::out);
+    coinfectionHistStream.open("../../outputs/" + coinfectionHistFile, std::ios::out);
+    coinfectionHFHistStream.open("../../outputs/" + coinfectionHFHistFile, std::ios::out);
+    totCarriageStream.open("../../outputs/" + totCarriageFile, std::ios::out);
 
     for(int s = 0; s < INIT_NUM_STYPES; s++) {
         for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
-            infectionStream.open(makeBiggerName("infections", s, "neighborhood", n).c_str(), std::ios::out);
+            infectionStream.open("../../outputs/" + makeBiggerName("infections", s, "neighborhood", n), std::ios::out);
             infectionStream.close();
-            infectedStream.open(makeBiggerName("infecteds", s, "neighborhood", n).c_str(), std::ios::out);
+            infectedStream.open("../../outputs/" + makeBiggerName("infecteds", s, "neighborhood", n), std::ios::out);
             infectedStream.close();
         }
     }
@@ -152,7 +142,7 @@ void Simulation::writeDemOutput() {
     // For 0 to max age, count ages 
     for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
         ageDistFile = makeBigName("age_dist_neighborhood", n);
-        ageDistStream.open(ageDistFile.c_str(), std::ios::app);
+        ageDistStream.open("../../outputs/" + ageDistFile, std::ios::app);
         for(int a = 0; a < maxAge + 1; a++) {
             ageDistStream << allHosts.get<age_neighborhood_tag>().count(boost::make_tuple(n, a)) << "\t";
         }
@@ -188,9 +178,9 @@ void Simulation::writeDemOutput() {
     hhDistStream << std::endl;
 }
 
-void Simulation::writeTheta(void) {
+void Simulation::writeTheta() {
     thetaFile = makeName("theta");
-    thetaStream.open(thetaFile.c_str(), std::ios::out);
+    thetaStream.open("../../outputs/" + thetaFile, std::ios::out);
     for(auto host : allHosts.get<age_tag>()) { // For each host...
         if(host->getAgeInY() < 6) {
             thetaStream << t - host->getDOB() << "\t" << host->getSummedTheta() << std::endl;
@@ -199,11 +189,11 @@ void Simulation::writeTheta(void) {
     thetaStream.close();
 }
 
-void Simulation::writeEpidOutput(void) {
+void Simulation::writeEpidOutput() {
     // I. Output infections by age to file
     for(int n = 0; n < NUM_NEIGHBORHOODS; n++) { // Fix when adapt to more than one neighborhood
         for(int s = 0; s < INIT_NUM_STYPES; s++) {
-            infectionStream.open(makeBiggerName("infections", s, "neighborhood", n).c_str(), std::ios::app);
+            infectionStream.open("../../outputs/" + makeBiggerName("infections", s, "neighborhood", n), std::ios::app);
             for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
                 infectionStream << numInfecteds[a][s][n] << "\t";
             }
@@ -216,14 +206,7 @@ void Simulation::writeEpidOutput(void) {
     epidTimesStream << epidOutputStrobe << std::endl;
 
     // III. Write infecteds by age to file for each serotype
-    int actualInfecteds[INIT_NUM_AGE_CATS][INIT_NUM_STYPES][NUM_NEIGHBORHOODS];
-    for(int n = 0; n < INIT_NUM_STYPES; n++) {
-        for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
-            for(int s = 0; s < INIT_NUM_STYPES; s++) {
-                actualInfecteds[a][s][n] = 0;
-            }
-        }
-    }
+    int actualInfecteds[INIT_NUM_AGE_CATS][INIT_NUM_STYPES][NUM_NEIGHBORHOODS] = {0};
 
     // IV. Write coinfections & total carriage to files
     int numCarryingPneumo = 0;
@@ -269,7 +252,7 @@ void Simulation::writeEpidOutput(void) {
 
     for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
         for(int s = 0; s < INIT_NUM_STYPES; s++) {
-            infectedStream.open(makeBiggerName("infecteds", s, "neighborhood", n).c_str(), std::ios::app);
+            infectedStream.open("../../outputs/" + makeBiggerName("infecteds", s, "neighborhood", n), std::ios::app);
             for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
                 infectedStream << actualInfecteds[a][s][n] << "\t";
             }
@@ -282,12 +265,12 @@ void Simulation::writeEpidOutput(void) {
 
 // Member function definitions
 
-void Simulation::runDemSim(void) {
+void Simulation::runDemSim() {
     double percentDone = 0.0;
     std::cout << "  Starting demographic component with seed=" << simID << "." << std::endl;
     writeDemOutput();
     demOutputStrobe += STROBE_DEM;
-    EventPQ::iterator eventIter = currentEvents.begin();
+    EventQueue::iterator eventIter = currentEvents.begin();
     while((*eventIter).time < DEM_SIM_LENGTH  && currentEvents.size() != 0 && allHosts.size() > 0)   {
         Event thisEvent = *eventIter;
         t = thisEvent.time;
@@ -311,7 +294,7 @@ void Simulation::runDemSim(void) {
     std::cout << "\t100% of this component complete." << std::endl;
 }
 
-double Simulation::runTestEpidSim(void) {
+double Simulation::runTestEpidSim() {
     if(allHosts.size() == 0) {
         std::cerr << "No hosts remaining for epidemiological simulation. Cancelling." << std::endl;
         assert(false);
@@ -323,7 +306,7 @@ double Simulation::runTestEpidSim(void) {
     demOutputStrobe = t;
     epidOutputStrobe = t;
     seedInfections();
-    EventPQ::iterator eventIter = currentEvents.begin();
+    EventQueue::iterator eventIter = currentEvents.begin();
     double nextTimeStep = t + EPID_DELTA_T;
     double prevalences[NUM_TEST_SAMPLES]; // holds prevalences at strobing periods
     for(int p = 0; p < NUM_TEST_SAMPLES; p++) {
@@ -380,7 +363,7 @@ double Simulation::runTestEpidSim(void) {
     return(meanPrev);
 }
 
-void Simulation::runEpidSim(void) {
+void Simulation::runEpidSim() {
     if(allHosts.size() == 0) {
         std::cerr << "No hosts remaining for epidemiological simulation. Cancelling." << std::endl;
         assert(false);
@@ -392,7 +375,7 @@ void Simulation::runEpidSim(void) {
     demOutputStrobe = t;
     epidOutputStrobe = t;
     seedInfections();
-    EventPQ::iterator eventIter = currentEvents.begin();
+    EventQueue::iterator eventIter = currentEvents.begin();
     double nextTimeStep = t + EPID_DELTA_T;
 
     while(t < EPID_SIM_LENGTH + demComplete)
@@ -461,7 +444,7 @@ void Simulation::executeEvent(Event & te) {
     }
 }
 
-void Simulation::seedInfections(void) {
+void Simulation::seedInfections() {
     // Currently assuming: 
     // .... only single colonizations occur for each serotype
     // .... not considering co-colonizations when calculating duration of infection at this point

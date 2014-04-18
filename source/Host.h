@@ -9,8 +9,8 @@
 class Host
 {
 public:
-    Host(double, double, int, int, int, EventPQ &, SimPars *, boost::mt19937 &);
-    ~Host(void);
+    Host(double, double, int, int, int, EventQueue &, SimPars *, boost::mt19937 &);
+    ~Host();
 
     // SET FUNCTION PROTOTYPES
     void setHousehold(int);
@@ -45,15 +45,15 @@ public:
     double getDOB() const;
 
     // MEMBER FUNCTION PROTOTYPES
-    void calcLifeHist(double, EventPQ &, double, boost::mt19937 &);
+    void calcLifeHist(double, EventQueue &, double, boost::mt19937 &);
     double calcDeath(boost::mt19937 &);
-    void addEvent(double, Event::Type type, int, EventPQ &);
-    void addEvent(double, Event::Type type, int, int, EventPQ &);
+    void addEvent(double, Event::Type type, int, EventQueue &);
+    void addEvent(double, Event::Type type, int, int, EventQueue &);
     double calcFledge(boost::mt19937 &);
     double calcPairAge(boost::mt19937 &);
     int calcNumBirths(boost::mt19937 &);
     double calcBirthAge(boost::mt19937 &);
-    void becomeInfected(int, double, EventPQ &, boost::mt19937 &);
+    void becomeInfected(int, double, EventQueue &, boost::mt19937 &);
     void recover(int, double);
     double calcRecovery(int, double, double, boost::mt19937 &);
     double calcRecovery(int, double, Infection &, boost::mt19937 &);

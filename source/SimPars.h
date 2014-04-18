@@ -23,14 +23,14 @@ class SimPars
 {
 public:
     SimPars(int tID, int sID);
-    ~SimPars(void);
+    ~SimPars();
 
     // PUBLIC FUNCTION PROTOYPES
     const age_index& get_demPMF_row(int) const;
     const double get_serotypePar_ij(int, int) const;
     const double get_XI_ij(int, int) const;
     const double get_waifw_ij(int, int) const;
-    const kids_index& get_parity(void) const;
+    const kids_index& get_parity() const;
     const double get_neighbor(int, int) const;
     const double get_normalized_neighbor(int, int) const;
     const double get_Hflu_prob(int) const;

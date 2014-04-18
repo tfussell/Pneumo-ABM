@@ -16,7 +16,7 @@
 #define HFLU_INDEX (INIT_NUM_STYPES-1)
 
 // HOST CONSTRUCTOR & DESTRUCTOR
-Host::Host(double t, double dob, int i, int h, int n, EventPQ & ce, SimPars * spPtr, boost::mt19937& rng) {
+Host::Host(double t, double dob, int i, int h, int n, EventQueue & ce, SimPars * spPtr, boost::mt19937& rng) {
     simParsPtr = spPtr;
     DOB = dob;
     id = i;
@@ -53,7 +53,7 @@ void Host::setDOB(double d) {
     DOB = d;
 }
 
-void Host::incrementAge(void) {
+void Host::incrementAge() {
     age++;
 }
 
@@ -69,7 +69,7 @@ void Host::setInf(bool b) {
     inf = b;
 }
 
-void Host::getVaccinated(void) {
+void Host::getVaccinated() {
     for(int s = 0; s < NUM_VACCINE_SEROTYPES; s++) {
         int thisSerotype = VACCINE_SEROTYPES[s];
         susc[thisSerotype] = std::min(susc[thisSerotype], 1.0 - VACCINE_EFFICACY);
@@ -77,39 +77,39 @@ void Host::getVaccinated(void) {
 }
 
 // GET FUNCTION DEFINITIONS
-int Host::getAgeInY(void) const {
+int Host::getAgeInY() const {
     return age;
 }
 
-int Host::getID(void) const {
+int Host::getID() const {
     return id;
 }
 
-int Host::getGroup(void) const {
+int Host::getGroup() const {
     return group;
 }
 
-int Host::getHousehold(void) const {
+int Host::getHousehold() const {
     return household;
 }
 
-int Host::getNeighborhood(void) const {
+int Host::getNeighborhood() const {
     return neighborhood;
 }
 
-bool Host::isPaired(void) const {
+bool Host::isPaired() const {
     return (partner > 0);
 }
 
-bool Host::isAdult(void) const {
+bool Host::isAdult() const {
     return ((double)age >= MATURITY_AGE);
 }
 
-bool Host::isEligible(void) const {
+bool Host::isEligible() const {
     return ((double)age >= MATURITY_AGE && partner == 0);
 }
 
-bool Host::hasFledged(void) const {
+bool Host::hasFledged() const {
     return fledge;
 }
 
@@ -117,19 +117,19 @@ int Host::isInfectedZ(int z) const {
     return carriageSummary[z];
 }
 
-bool Host::isInfected(void) const {
+bool Host::isInfected() const {
     return(isInfectedPneumo() || isInfectedHflu());
 }
 
-bool Host::isInfectedPneumo(void) const {
+bool Host::isInfectedPneumo() const {
     return (carriage.size() - carriageSummary[HFLU_INDEX] > 0.5);
 }
 
-bool Host::isInfectedHflu(void) const {
+bool Host::isInfectedHflu() const {
     return (carriageSummary[HFLU_INDEX] > 0);
 }
 
-int Host::totStrains(void) const {
+int Host::totStrains() const {
     int m = 0;
     for(int s = 0; s < INIT_NUM_STYPES; s++) {
         m += (carriageSummary[s] > 0);
@@ -162,7 +162,7 @@ int Host::getSummedTheta() const {
 
 // MEMBER FUNCTION DEFINITIONS
 
-void Host::calcLifeHist(double t, EventPQ &cePtr, double initAge, boost::mt19937 & rng) {
+void Host::calcLifeHist(double t, EventQueue &cePtr, double initAge, boost::mt19937 & rng) {
     // Schedule death
     double ageAtDeath = 0.0;
     while(ageAtDeath <= initAge) {
@@ -221,12 +221,12 @@ double Host::calcDeath(boost::mt19937 & rng) {
     return 365.0*((double)age_death + r01(rng));
 }
 
-void Host::addEvent(double et, Event::Type eid, int hid, EventPQ & ceptr) {
+void Host::addEvent(double et, Event::Type eid, int hid, EventQueue & ceptr) {
     Event thisEvent(et, eid, hid, 0);
     ceptr.insert(thisEvent);
 }
 
-void Host::addEvent(double et, Event::Type eid, int hid, int s, EventPQ & ceptr) {
+void Host::addEvent(double et, Event::Type eid, int hid, int s, EventQueue & ceptr) {
     Event thisEvent(et, eid, hid, s);
     ceptr.insert(thisEvent);
 }
@@ -250,7 +250,7 @@ double Host::calcBirthAge(boost::mt19937 & rng) {
     return 365.0*((double)birth_age + r01(rng));
 }
 
-void Host::becomeInfected(int s, double currentTime, EventPQ & ce, boost::mt19937& rng) {
+void Host::becomeInfected(int s, double currentTime, EventQueue & ce, boost::mt19937& rng) {
     Infection thisInf(currentTime, 0.0);
     carriage.insert(InfectionMap::value_type(s, thisInf));
     carriageSummary[s]++;
@@ -283,7 +283,7 @@ void Host::becomeInfected(int s, double currentTime, EventPQ & ce, boost::mt1993
                 newRecTime = currentTime + r01(rng)*EPSILON;
                 oldRecTime = (iter->second).recT;
                 if(oldRecTime != 0.0 && oldRecTime < DOD) {
-                    EventPQ::iterator epqItr = ce.find(Event(oldRecTime));
+                    EventQueue::iterator epqItr = ce.find(Event(oldRecTime));
                     ce.erase(epqItr);
                 }
                 if(newRecTime < DOD) {

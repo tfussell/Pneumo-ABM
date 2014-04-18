@@ -35,4 +35,4 @@ public:
     int s; // strain, used in infection events
 };
 
-typedef std::multiset< Event, std::less< Event > > EventPQ;
+typedef std::multiset< Event, std::less< Event > > EventQueue;

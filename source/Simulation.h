@@ -21,9 +21,9 @@ public:
     ~Simulation();
 
     // MEMBER FUNCTION PROTOTYPES
-    void runDemSim(void);
-    void runEpidSim(void);
-    double runTestEpidSim(void);
+    void runDemSim();
+    void runEpidSim();
+    double runTestEpidSim();
 
 private:
     // SIMULATION OBJECTS
@@ -38,8 +38,9 @@ private:
     int eventCtr; // for memory management and debugging
     HostContainer allHosts; // shared_ptr to Hosts
     HouseholdContainer allHouseholds; // set of household ids
-    int numInfecteds[INIT_NUM_AGE_CATS][INIT_NUM_STYPES][NUM_NEIGHBORHOODS]; // counts number infected with each serotype by age
-    EventPQ currentEvents; // current events heap
+    // counts number infected with each serotype by age
+    std::array<std::array<std::array<int, NUM_NEIGHBORHOODS>, INIT_NUM_STYPES>, INIT_NUM_AGE_CATS> numInfecteds;
+    EventQueue currentEvents; // current events queue
     SimPars * simParsPtr;
     int treatment;
 
@@ -47,7 +48,7 @@ private:
     void ageHost(int id);
     int calcPartnerAge(int a);
     void executeEvent(Event & te);
-    void seedInfections(void);
+    void seedInfections();
     void killHost(int id);
     void pairHost(int id);
     void partner2Hosts(int id1, int id2);
@@ -56,13 +57,13 @@ private:
     void infectHost(int id, int s);
     void recoverHost(int id, int s);
     void vaccinateHost(int id);
-    void calcSI(void);
+    void calcSI();
     std::string d2str(double d);
     std::string makeName(std::string s);
     std::string makeBigName(std::string, int);
     std::string makeBiggerName(std::string, int, std::string, int);
     void addEvent(double et, Event::Type event_type, int hid, int s);
-    double calcPrev(void);
+    double calcPrev();
 
     // STREAM MANAGEMENT
     void writeDemOutput();

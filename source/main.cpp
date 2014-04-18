@@ -17,20 +17,98 @@
 // Function prototypes
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber);
 void initializeBeta(int treatmentNumber, double beta, int simNumber);
-void printAssumptions(void);
+void printAssumptions();
 double adjustBeta(double preve, double weight, double sb, int treatmentNumber, int simNumber);
 std::string d2str(double d);
 std::string makeName(int treatmentIdx, int simIdx, std::string suffix);
 void printTotalTime(time_t t1, time_t t2);
 
+void match_prevalence(int treatmentNumber, int simNumber, double treatment, double startingBeta)
+{
+    std::cout << "Treatment #" << treatmentNumber << " and simulation #" << simNumber << ":" << std::endl;
+    int matchAttempts = 0;
+    double error = 0.0;
+    double usedBeta = startingBeta;
+    double prevError = 10.0;
+    double oldPrevError = 1.0;
+    double thisBeta = 0.0;
+    double weight = INIT_WEIGHT;
+    while(matchAttempts < MAX_MATCH_ATTEMPTS && abs(prevError) > PREV_ERROR_THOLD) {
+        SimPars thesePars(treatmentNumber, simNumber);
+        SimPars * spPtr = &thesePars;
+        Simulation thisSim(treatmentNumber, simNumber, spPtr);
+        std::cout << "  Attempt #" << matchAttempts + 1 << std::endl;
+        if(prevError == 10.0) {
+            usedBeta = startingBeta;
+        }
+        thisSim.runDemSim();
+        prevError = thisSim.runTestEpidSim() - TARGET_PREV;
+        std::cout << "Prevalence error=" << prevError << "; weight=" << weight << std::endl;
+        if(abs(prevError) > PREV_ERROR_THOLD) {
+            if(prevError*oldPrevError < 0) { // if error changed signs and overshot, reduce weight
+                weight *= COOL_DOWN;
+            }
+            else if(abs(TARGET_PREV - prevError) / abs(TARGET_PREV - oldPrevError) > TEMP_THOLD) { // if climbing too slowly, increase weight
+                weight *= WARM_UP;
+            }
+            thisBeta = adjustBeta(prevError, weight, startingBeta, treatmentNumber, simNumber);
+            usedBeta = thisBeta;
+            oldPrevError = prevError;
+        }
+        matchAttempts++;
+    }
+    error = prevError;
+
+    if(prevError < PREV_ERROR_THOLD) {
+        std::cout << "\tBeginning simulation #" << simNumber << std::endl;
+        time_t tic;
+        tic = time(NULL);
+        SimPars thesePars(treatmentNumber, simNumber);
+        SimPars * spPtr = &thesePars;
+        Simulation thisSim(treatmentNumber, simNumber, spPtr);
+        thisSim.runDemSim();
+        thisSim.runEpidSim();
+        time_t toc;
+        toc = time(NULL);
+        printTotalTime(tic, toc);
+    }
+    else {
+        std::cout << "Acceptable prevalence not found." << std::endl;
+    }
+
+    // Output used beta
+    std::ofstream thisBetaStream;
+    std::ofstream errorStream;
+    std::string betaFile = makeName(treatmentNumber, simNumber, "beta_used");
+    std::string errorFile = makeName(treatmentNumber, simNumber, "prevalence_errors");
+    thisBetaStream.open("../../outputs/" + betaFile, std::ios::out);
+    errorStream.open("../../outputs/" + errorFile, std::ios::out);
+    thisBetaStream << treatment << "\t" << usedBeta;
+    errorStream << error;
+    thisBetaStream.close();
+    errorStream.close();
+}
+
+void run_simulation(int simNumber, int treatmentNumber)
+{
+    std::cout << "\tBeginning simulation #" << simNumber << std::endl;
+    time_t tic;
+    tic = time(NULL);
+    SimPars thesePars(treatmentNumber, simNumber);
+    SimPars * spPtr = &thesePars;
+    Simulation thisSim(treatmentNumber, simNumber, spPtr);
+    thisSim.runDemSim();
+    thisSim.runEpidSim();
+    time_t toc;
+    toc = time(NULL);
+    printTotalTime(tic, toc);
+}
+
 int main()
 {
-    int treatmentNumber;
-    double treatment;
-    int simNumber;
-    std::cin >> treatmentNumber;
-    std::cin >> treatment;
-    std::cin >> simNumber;
+    int treatmentNumber = 1;
+    double treatment = 1;
+    int simNumber = 1;
     std::cout << "Treatment number " << treatmentNumber << ", treatment value " << treatment << ", simulation number " << simNumber << std::endl;
     printAssumptions();
 
@@ -39,7 +117,7 @@ int main()
 
     // Get beta values
     std::ifstream thisFile;
-    thisFile.open("Betas_used.txt", std::ios::in);
+    thisFile.open("../../inputs/Betas_used.txt", std::ios::in);
     if(!thisFile) {
         std::cerr << "Error reading Betas_used.txt." << std::endl;
         exit(1);
@@ -54,7 +132,7 @@ int main()
 
     // Get corresponding treatment value (sigma)
     std::ifstream thisFileT;
-    thisFileT.open("Treatments.txt", std::ios::in);
+    thisFileT.open("../../inputs/Treatments.txt", std::ios::in);
     if(!thisFileT) {
         std::cerr << "Error reading Treatments.txt." << std::endl;
         exit(1);
@@ -78,86 +156,8 @@ int main()
     initializeBeta(treatmentNumber, startingBeta, simNumber);
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-#ifdef MATCH_PREVALENCE
-    cout << "Treatment #" << treatmentNumber << " and simulation #" << simNumber << ":" << endl;
-    int matchAttempts = 0;
-    double error = 0.0;
-    double usedBeta = startingBeta;
-    double prevError = 10.0;
-    double oldPrevError = 1.0;
-    double thisBeta = 0.0;
-    double weight = INIT_WEIGHT;
-    while(matchAttempts < MAX_MATCH_ATTEMPTS && abs(prevError) > PREV_ERROR_THOLD) {
-        SimPars thesePars(treatmentNumber, simNumber);
-        SimPars * spPtr = &thesePars;
-        Simulation thisSim(treatmentNumber, simNumber, spPtr);
-        cout << "  Attempt #" << matchAttempts + 1 << endl;
-        if(prevError == 10.0) {
-            usedBeta = startingBeta;
-        }
-        thisSim.runDemSim();
-        prevError = thisSim.runTestEpidSim() - TARGET_PREV;
-        cout << "Prevalence error=" << prevError << "; weight=" << weight << endl;
-        if(abs(prevError) > PREV_ERROR_THOLD) {
-            if(prevError*oldPrevError < 0) { // if error changed signs and overshot, reduce weight
-                weight *= COOL_DOWN;
-            }
-            else if(abs(TARGET_PREV - prevError) / abs(TARGET_PREV - oldPrevError) > TEMP_THOLD) { // if climbing too slowly, increase weight
-                weight *= WARM_UP;
-            }
-            thisBeta = adjustBeta(prevError, weight, startingBeta, treatmentNumber, simNumber);
-            usedBeta = thisBeta;
-            oldPrevError = prevError;
-        }
-        matchAttempts++;
-    }
-    error = prevError;
-
-    if(prevError < PREV_ERROR_THOLD) {
-        cout << "\tBeginning simulation #" << simNumber << endl;
-        time_t tic;
-        tic = time(NULL);
-        SimPars thesePars(treatmentNumber, simNumber);
-        SimPars * spPtr = &thesePars;
-        Simulation thisSim(treatmentNumber, simNumber, spPtr);
-        thisSim.runDemSim();
-        thisSim.runEpidSim();
-        time_t toc;
-        toc = time(NULL);
-        printTotalTime(tic, toc);
-    }
-    else {
-        cout << "Acceptable prevalence not found." << endl;
-    }
-
-    // Output used beta
-    std::ofstream thisBetaStream;
-    std::ofstream errorStream;
-    string betaFile = makeName(treatmentNumber, simNumber, "beta_used");
-    string errorFile = makeName(treatmentNumber, simNumber, "prevalence_errors");
-    thisBetaStream.open(betaFile.c_str(), ios::out);
-    errorStream.open(errorFile.c_str(), ios::out);
-    thisBetaStream << treatment << "\t" << usedBeta;
-    errorStream << error;
-    thisBetaStream.close();
-    errorStream.close();
-
-#else // Not trying to match prevalence
-
-    std::cout << "\tBeginning simulation #" << simNumber << std::endl;
-    time_t tic;
-    tic = time(NULL);
-    SimPars thesePars(treatmentNumber, simNumber);
-    SimPars * spPtr = &thesePars;
-    Simulation thisSim(treatmentNumber, simNumber, spPtr);
-    thisSim.runDemSim();
-    thisSim.runEpidSim();
-    time_t toc;
-    toc = time(NULL);
-    printTotalTime(tic, toc);
-
-#endif
-    return 0;
+    //match_prevalence(treatmentNumber, simNumber, treatment, startingBeta);
+    run_simulation(simNumber, treatmentNumber);
 }
 
 double adjustBeta(double preve, double w, double sb, int treatmentNumber, int simNumber) {
@@ -176,7 +176,7 @@ double adjustBeta(double preve, double w, double sb, int treatmentNumber, int si
     else {
         std::ifstream thisFile3;
         std::string filename = makeName(treatmentNumber, simNumber, "BETA");
-        thisFile3.open(filename.c_str(), std::ios::in);
+        thisFile3.open("../../inputs" + filename, std::ios::in);
         if(!thisFile3) {
             std::cerr << "Error reading " << filename << std::endl;
             exit(1);
@@ -200,7 +200,7 @@ double adjustBeta(double preve, double w, double sb, int treatmentNumber, int si
 
     std::ofstream betaStream;
     std::string filename2 = makeName(treatmentNumber, simNumber, "BETA");
-    betaStream.open(filename2.c_str(), std::ios::out);
+    betaStream.open("../../outputs/" + filename2, std::ios::out);
     for(int b = 0; b < INIT_NUM_STYPES; b++) {
         betaStream << newBetas[b] << "\t";
     }
@@ -213,7 +213,7 @@ double adjustBeta(double preve, double w, double sb, int treatmentNumber, int si
 void initializeBeta(int treatmentNumber, double beta, int simNumber) {
     std::ofstream betaStream;
     std::string filename2 = makeName(treatmentNumber, simNumber, "BETA");
-    betaStream.open(filename2.c_str(), std::ios::out);
+    betaStream.open("../../outputs/" + filename2, std::ios::out);
     for(int b = 0; b < HFLU_INDEX; b++) {
         betaStream << beta << "\t";
     }
@@ -236,7 +236,7 @@ void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {
 
     std::ofstream xiStream;
     std::string XIFile = makeName(treatmentNumber, simNumber, "XI");
-    xiStream.open(XIFile.c_str(), std::ios::out);
+    xiStream.open("../../outputs/" + XIFile, std::ios::out);
     for(int i = 0; i < INIT_NUM_STYPES; i++) {
         for(int j = 0; j < INIT_NUM_STYPES; j++) {
             xiStream << thisXI[i][j];
