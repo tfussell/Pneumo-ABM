@@ -372,10 +372,10 @@ void Host::calcSusc(double t) {
         for ( int z = 0; z < HFLU_INDEX; z++ ) {
             runSum += simParsPtr->get_XI_ij(s,z)*(double)( immune[z]>0 ); // contribution of past infections
             if ( isInfectedZ(z) > 0 ) {
-                maxReduction = max( maxReduction, simParsPtr->get_reductions(z));
+                maxReduction = std::max( maxReduction, simParsPtr->get_reductions(z));
             }
         }
-        susc[ s ] = 1.0 - min(1.0,runSum);
+        susc[s] = 1.0 - std::min(1.0, runSum);
         susc[ s ] *= ( 1.0 - maxReduction );
     } // end for each serotype
 #endif

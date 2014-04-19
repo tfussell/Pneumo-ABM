@@ -86,7 +86,7 @@ void SimPars::initializeDemInput() {
         thisFile.open("../../inputs/" + std::string(SOCIODEM_FILENAMES[i]), std::ios::in);
         if(!thisFile) {
             std::cerr << "Error reading " << SOCIODEM_FILENAMES[i] << " file." << std::endl;
-            exit(1);
+            throw std::runtime_error("");
         }
         double currentMax = 0.0;
         int maxIndex = 0;
@@ -120,7 +120,7 @@ void SimPars::initializeDemInput() {
             }
             else {
                 std::cout << "Difference (" << diff << ") is too great (max acceptable is " << ERR_EPSILON << "). Fix the input file." << std::endl;
-                exit(1);
+                throw std::runtime_error("");
             }
         }
     }
@@ -131,7 +131,7 @@ void SimPars::initializeDemInput() {
     thisFile3.open("../../inputs/WAIFW.txt", std::ios::in);
     if(!thisFile3) {
         std::cerr << "Error reading " << WAIFW_FILENAME << "." << std::endl;
-        exit(1);
+        throw std::runtime_error("");
     }
     double thisVal;
     int ii = 0;
@@ -169,7 +169,7 @@ void SimPars::initializeDemInput() {
     thisFile2.open("../../inputs/" + std::string(PARITY_FILENAME), std::ios::in);
     if(!thisFile2) {
         std::cerr << "Error reading " << PARITY_FILENAME << "." << std::endl;
-        exit(1);
+        throw std::runtime_error("");
     }
     thisVal = 0;
     i = 0;
@@ -202,7 +202,7 @@ void SimPars::initializeDemInput() {
     }
     else {
         std::cerr << "Difference (" << diff << ") exceeds acceptable threshold (" << ERR_EPSILON << ")." << std::endl;
-        exit(1);
+        throw std::runtime_error("");
     }
 
     // NEIGHBORHOODS
@@ -210,7 +210,7 @@ void SimPars::initializeDemInput() {
     thisFile4.open("../../inputs/" + std::string(NEIGHBORHOOD_FILENAME), std::ios::in);
     if(!thisFile4) {
         std::cerr << "Error reading " << NEIGHBORHOOD_FILENAME << "." << std::endl;
-        exit(1);
+        throw std::runtime_error("");
     }
     double thisVal2;
     int ii2 = 0;
@@ -252,7 +252,7 @@ void SimPars::initializeEpidInput() {
         thisFile.open("../../inputs/" + std::string(EPID_FILENAMES[f]), std::ios::in);
         if(!thisFile) {
             std::cerr << "Error reading " << EPID_FILENAMES[f] << " file." << std::endl;
-            exit(1);
+            throw std::runtime_error("");
         }
         double thisVal;
         int ii = 0;
@@ -271,7 +271,7 @@ void SimPars::initializeEpidInput() {
     betaStream.open("../../outputs/" + betaFilename, std::ios::in);
     if(!betaStream) {
         std::cerr << "Error reading " << betaFilename << "." << std::endl;
-        exit(1);
+        throw std::runtime_error("");
     }
     double betaVal = 0.0;
     int ib = 0;
@@ -305,7 +305,7 @@ void SimPars::initializeEpidInput() {
     thisFile.open("../../outputs/" + XIFile, std::ios::in);
     if(!thisFile) {
         std::cerr << "Error reading " << XIFile << "." << std::endl;
-        exit(1);
+        throw std::runtime_error("");
     }
     double thisVal;
     int ii = 0;
@@ -329,7 +329,7 @@ void SimPars::initializeEpidInput() {
     hfStream.open("../../inputs/" + std::string(HFPROB_FILENAME), std::ios::in);
     if(!hfStream) {
         std::cerr << "Error reading " << HFPROB_FILENAME << "." << std::endl;
-        exit(1);
+        throw std::runtime_error("");
     }
     i = 0;
     while(!hfStream.eof() && (i < INIT_NUM_STYPES - 1)) {
