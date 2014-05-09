@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -35,6 +36,8 @@ public:
     const double get_normalized_neighbor(int, int) const;
     const double get_Hflu_prob(int) const;
     const double get_reductions(int) const;
+    void set_serotype_ranks(const std::array<double, INIT_NUM_STYPES> &ranks);
+    void set_betas(const std::array<double, INIT_NUM_STYPES> &betas);
 
 private:
     // SIMPARS OBJECTS

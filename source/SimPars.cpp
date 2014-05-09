@@ -242,6 +242,35 @@ void SimPars::initializeDemInput() {
 
 }
 
+void SimPars::set_betas(const std::array<double, INIT_NUM_STYPES> &betas)
+{
+    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        serotypePars[BETA_INDEX][s] = betas[s];
+    }
+}
+
+void SimPars::set_serotype_ranks(const std::array<double, INIT_NUM_STYPES> &ranks)
+{
+    double maxDuration = 220.0;
+    double minDuration = BASE_DURATION;
+    double rangeDuration = maxDuration - minDuration;
+
+    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        if(MAX_REDUCTION > 0) {
+            if(s < HFLU_INDEX) {
+                double x = (ranks[s] - 1) / (INIT_NUM_STYPES - 2);
+                serotypePars[MEAN_DURATION_INDEX][s] = maxDuration - x * rangeDuration;
+                reductions[s] = MAX_REDUCTION * (1 - x);
+            }
+            else {
+                reductions[s] = 0.0;
+            }
+        }
+        else {
+            reductions[s] = 0.0;
+        }
+    }
+}
 
 void SimPars::initializeEpidInput() {
 

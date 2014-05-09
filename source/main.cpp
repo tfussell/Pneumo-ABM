@@ -16,80 +16,167 @@
 
 // Function prototypes
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber);
-void initializeBeta(int treatmentNumber, double beta, int simNumber);
 void printAssumptions();
-void adjustBetas(const std::array<double, INIT_NUM_STYPES> &prevalence_error);
 std::string d2str(double d);
 std::string makeName(int treatmentIdx, int simIdx, std::string suffix);
 void printTotalTime(time_t t1, time_t t2);
+
+double log_factorial(double n)
+{
+    return n * log(n) - n + (log(n * (1 + 4 * n * (1 + 2 * n)))) / 6 + log(3.141592653589793238462) / 2;
+}
+
+double calculate_likelihood(const std::array<double, INIT_NUM_STYPES + 1> &expected, const std::array<int, INIT_NUM_STYPES + 1> &observed)
+{
+    int n = std::accumulate(observed.begin(), observed.end(), 0);
+    double log_likelihood = log_factorial(n);
+
+    for(int i = 0; i < INIT_NUM_STYPES + 1; i++)
+    {
+        if(i != HFLU_INDEX)
+        {
+            log_likelihood -= log_factorial(observed[i]);
+            log_likelihood += observed[i] * log(expected[i]);
+        }
+    }
+
+    return log_likelihood;
+}
+
+void adjust_ranks(const std::array<double, INIT_NUM_STYPES> &errors, std::array<double, INIT_NUM_STYPES> &ranks)
+{
+    for(int i = 0; i < INIT_NUM_STYPES - 1; i++)
+    {
+        if(errors[i] > 0)
+        {
+            ranks[i] = std::min(ranks[i] + 0.5, (double)(INIT_NUM_STYPES - 1));
+        }
+        else
+        {
+            ranks[i] = std::max(ranks[i] - 0.5, 1.0);
+        }
+        std::cout << "newRanks[" << i << "]=" << ranks[i] << std::endl;
+    }
+}
+
+void adjustBeta(double preve, double w, std::array<double, INIT_NUM_STYPES> &betas)
+{
+    for(int b = 0; b < INIT_NUM_STYPES; b++)
+    {
+        if(b != HFLU_INDEX)
+        {
+            betas[b] *= (1.0 - w*preve);
+        }
+        else
+        {
+            betas[b] = HFLU_BETA;
+        }
+        std::cout << "newBetas[" << b << "]=" << betas[b] << std::endl;
+    }
+}
 
 void match_prevalence(int treatmentNumber, int simNumber, double treatment, double startingBeta)
 {
     std::cout << "Treatment #" << treatmentNumber << " and simulation #" << simNumber << ":" << std::endl;
 
-    int matchAttempts = 0;
-    double sum_errors = 10.0;
+    std::array<double, INIT_NUM_STYPES> betas;
+    betas.fill(startingBeta);
 
-    std::array<double, INIT_NUM_STYPES> target_prevalence, prevalence_error;
-    target_prevalence.fill(0.01);
-    prevalence_error.fill(0);
+    std::array<double, INIT_NUM_STYPES> serotype_ranks;
+    for(int i = 0; i < INIT_NUM_STYPES; i++)
+    {
+        serotype_ranks[i] = i + 1;
+    }
 
-    while(matchAttempts < MAX_MATCH_ATTEMPTS && abs(sum_errors) > PREV_ERROR_THOLD) {
+    double best_likelihood = std::numeric_limits<double>::lowest();
+    std::array<double, INIT_NUM_STYPES> best_betas = betas;
+    std::array<double, INIT_NUM_STYPES> best_serotype_ranks = serotype_ranks;
+
+    double prevError = 10.0;
+    double oldPrevError = 1.0;
+    double weight = INIT_WEIGHT;
+    std::array<int, INIT_NUM_STYPES + 1> observed_prevalence = {283, 237, 184, 117, 90, 85, 84, 70, 56, 54, 53, 51, 49, 49, 43, 38, 34, 34, 29, 25, 23, 21, 19, 18, 15, 0, 10079};
+
+    for(int attempt = 0; attempt < 10; attempt++)
+    {
         SimPars thesePars(treatmentNumber, simNumber);
+        thesePars.set_serotype_ranks(serotype_ranks);
+        thesePars.set_betas(betas);
         Simulation thisSim(treatmentNumber, simNumber, &thesePars);
-        std::cout << "  Attempt #" << matchAttempts + 1 << std::endl;
 
         thisSim.runDemSim();
-        auto current_prevalence = thisSim.runTestEpidSim();
+        auto serotype_counts = thisSim.runTestEpidSim();
+
+        std::array<double, INIT_NUM_STYPES + 1> expected_prevalence = {0};
+        std::array<double, INIT_NUM_STYPES> prevalence_error = {0};
+
+        double expected_population = std::accumulate(serotype_counts.begin(), serotype_counts.end(), 0.0);
+        double infected_prevalence = 0;
+        int observed_population = std::accumulate(observed_prevalence.begin(), observed_prevalence.begin() + INIT_NUM_STYPES + 1, 0);
+        double target_prevalence = std::accumulate(observed_prevalence.begin(), observed_prevalence.begin() + INIT_NUM_STYPES, 0.0) / observed_population;
 
         for(int i = 0; i < INIT_NUM_STYPES; i++)
         {
-            prevalence_error[i] = current_prevalence[i] - target_prevalence[i];
-            if(i == INIT_NUM_STYPES - 1)
+            infected_prevalence += serotype_counts[i] / (double)expected_population;
+            prevalence_error[i] = expected_prevalence[i] - observed_prevalence[i] / (double)observed_population;
+
+            if(i == HFLU_INDEX)
             {
                 prevalence_error[i] = 0;
             }
+
+            expected_prevalence[i] = (serotype_counts[i] + 0.01) / (expected_population + INIT_NUM_STYPES * 0.01);
         }
 
-        sum_errors = std::accumulate(prevalence_error.begin(), prevalence_error.end(), 0.0, [](double prev, double v) { return prev + abs(v); });
-        std::cout << "Prevalence error=" << sum_errors << std::endl;
+        expected_prevalence.back() = 1 - infected_prevalence;
 
-        if(sum_errors > PREV_ERROR_THOLD) {
-            adjustBetas(prevalence_error);
+        double likelihood = calculate_likelihood(expected_prevalence, observed_prevalence);
+
+        if(likelihood > best_likelihood)
+        {
+            best_likelihood = likelihood;
+            best_betas = betas;
+            best_serotype_ranks = serotype_ranks;
         }
-        matchAttempts++;
-    }
+        else
+        {
+            betas = best_betas;
+            serotype_ranks = best_serotype_ranks;
+        }
 
-    if(sum_errors < PREV_ERROR_THOLD) {
-        std::cout << "\tBeginning simulation #" << simNumber << std::endl;
-        time_t tic;
-        tic = time(NULL);
-        SimPars thesePars(treatmentNumber, simNumber);
-        SimPars * spPtr = &thesePars;
-        Simulation thisSim(treatmentNumber, simNumber, spPtr);
-        thisSim.runDemSim();
-        thisSim.runEpidSim();
-        time_t toc;
-        toc = time(NULL);
-        printTotalTime(tic, toc);
-    }
-    else {
-        std::cout << "Acceptable prevalence not found." << std::endl;
-    }
+        std::cout << "Likelihood=" << likelihood << "(best=" << best_likelihood << ")" << std::endl;
 
-    /*
-    // Output used beta
-    std::ofstream thisBetaStream;
-    std::ofstream errorStream;
-    std::string betaFile = makeName(treatmentNumber, simNumber, "beta_used");
-    std::string errorFile = makeName(treatmentNumber, simNumber, "prevalence_errors");
-    thisBetaStream.open("../../outputs/" + betaFile, std::ios::out);
-    errorStream.open("../../outputs/" + errorFile, std::ios::out);
-    thisBetaStream << treatment << "\t" << usedBeta;
-    errorStream << error;
-    thisBetaStream.close();
-    errorStream.close();
-    */
+        if(attempt % 2 == 0)
+        {
+            std::cout << "Fitting overall prevalence" << std::endl;
+
+            prevError = infected_prevalence - target_prevalence;
+            std::cout << "Observed prevalence=" << target_prevalence << "; expected prevalence=" << infected_prevalence << "; error=" << prevError << "; weight = " << weight << std::endl;
+
+            if(abs(prevError) > PREV_ERROR_THOLD)
+            {
+                // if error changed signs and overshot, reduce weight
+                if(prevError * oldPrevError < 0)
+                {
+                    weight *= COOL_DOWN;
+                }
+                // if climbing too slowly, increase weight
+                else if(abs(target_prevalence - prevError) / abs(target_prevalence - oldPrevError) > TEMP_THOLD)
+                {
+                    weight *= WARM_UP;
+                }
+
+                adjustBeta(prevError, weight, betas);
+
+                oldPrevError = prevError;
+            }
+        }
+        else
+        {
+            std::cout << "Fitting per-serotype prevalence" << std::endl;
+            adjust_ranks(prevalence_error, serotype_ranks);
+        }
+    }
 }
 
 void run_simulation(int simNumber, int treatmentNumber)
@@ -156,67 +243,10 @@ int main()
 
     startingBeta = betaTable[bestTreatment][1];
     std::cout << "Best match to treatment value " << treatment << " is beta = " << startingBeta << " (associated treatment value is " << betaTable[bestTreatment][0] << ")" << std::endl;
-    initializeBeta(treatmentNumber, startingBeta, simNumber);
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-    match_prevalence(treatmentNumber, simNumber, treatment, startingBeta);
+    match_prevalence(treatmentNumber, simNumber, treatment, 0.1);
     //run_simulation(simNumber, treatmentNumber);
-}
-
-void adjustBetas(const std::array<double, INIT_NUM_STYPES> &prevalence_error) {
-    std::array<double, INIT_NUM_STYPES> betas;
-
-    {
-        std::ifstream betas_in;
-        std::string filename = makeName(1, 1, "BETA");
-        betas_in.open("../../outputs/" + filename, std::ios::in);
-        if(!betas_in) {
-            std::cerr << "Error reading " << filename << std::endl;
-            throw std::runtime_error("");
-        }
-        double thisVal;
-        int b = 0;
-        while(!betas_in.eof()) {
-            betas_in >> thisVal;
-            if(b < HFLU_INDEX) {
-                if(prevalence_error[b] < 0)
-                {
-                    betas[b] = std::min(1.0, thisVal + 0.01);
-                }
-                else
-                {
-                    betas[b] = std::max(0.0, thisVal - 0.01);
-                }
-            }
-            else {
-                betas[b] = HFLU_BETA;
-            }
-            std::cout << "beta[" << b << "]: " << thisVal << "->" << betas[b] << std::endl;
-            b++;
-        }
-    }
-
-    std::ofstream betas_out;
-    std::string filename2 = makeName(1, 1, "BETA");
-    betas_out.open("../../outputs/" + filename2, std::ios::out);
-    for(int b = 0; b < INIT_NUM_STYPES; b++) {
-        betas_out << betas[b];
-        if(b != INIT_NUM_STYPES - 1)
-        {
-            betas_out << "\t";
-        }
-    }
-}
-
-void initializeBeta(int treatmentNumber, double beta, int simNumber) {
-    std::ofstream betaStream;
-    std::string filename2 = makeName(treatmentNumber, simNumber, "BETA");
-    betaStream.open("../../outputs/" + filename2, std::ios::out);
-    for(int b = 0; b < HFLU_INDEX; b++) {
-        betaStream << beta << "\t";
-    }
-    betaStream << HFLU_BETA;
-    betaStream.close();
 }
 
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {

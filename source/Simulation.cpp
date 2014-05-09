@@ -294,7 +294,7 @@ void Simulation::runDemSim() {
     std::cout << "\t100% of this component complete." << std::endl;
 }
 
-std::array<double, INIT_NUM_STYPES> Simulation::runTestEpidSim() {
+std::array<double, INIT_NUM_STYPES + 1> Simulation::runTestEpidSim() {
     if(allHosts.size() == 0) {
         std::cerr << "No hosts remaining for epidemiological simulation. Cancelling." << std::endl;
         assert(false);
@@ -310,7 +310,7 @@ std::array<double, INIT_NUM_STYPES> Simulation::runTestEpidSim() {
     double nextTimeStep = t + EPID_DELTA_T;
 
     // holds prevalences at strobing periods
-    std::array<std::array<double, INIT_NUM_STYPES>, NUM_TEST_SAMPLES> prevalences = {0.0};
+    std::array<std::array<int, INIT_NUM_STYPES + 1>, NUM_TEST_SAMPLES> prevalences = {0};
 
     double prevYear = DEM_SIM_LENGTH + TEST_EPID_SIM_LENGTH - (NUM_TEST_SAMPLES * 365.0); // first simulation time to start sampling
     int prevSamples = 0;
@@ -351,8 +351,8 @@ std::array<double, INIT_NUM_STYPES> Simulation::runTestEpidSim() {
         nextTimeStep += EPID_DELTA_T;
     }
     std::cout << "\t100% of this test component complete." << std::endl;
-    std::array<double, INIT_NUM_STYPES> meanPrev = {0.0};
-    for(int i = 0; i < INIT_NUM_STYPES; i++)
+    std::array<double, INIT_NUM_STYPES + 1> meanPrev = {0.0};
+    for(int i = 0; i < INIT_NUM_STYPES + 1; i++)
     {
         double sumPrev = 0.0;
         for(int p = 0; p < NUM_TEST_SAMPLES; p++)
@@ -743,11 +743,11 @@ void Simulation::vaccinateHost(int id) {
     allHosts.modify(it, [](boost::shared_ptr<Host> h) { h->getVaccinated(); });
 }
 
-std::array<double, INIT_NUM_STYPES> Simulation::calcPrev() {
+std::array<int, INIT_NUM_STYPES + 1> Simulation::calcPrev() {
     // Get population sizes of kids <5
     int N_total = 0;
     int I_total_pneumo = 0;
-    std::array<int, INIT_NUM_STYPES> serotype_count = {0};
+    std::array<int, INIT_NUM_STYPES + 1> serotype_count = {0};
     int I_total_hflu = 0;
     HostsByAge& sorted_index = allHosts.get<age_tag>();
     for(int a = 0; a < 5; a++) {
@@ -770,7 +770,7 @@ std::array<double, INIT_NUM_STYPES> Simulation::calcPrev() {
             }
             while(concurrent_serotypes.size() > 1)
             {
-                auto random_serotype_index = r01(rng) * concurrent_serotypes.size();
+                auto random_serotype_index = static_cast<std::size_t>(r01(rng) * concurrent_serotypes.size());
                 std::swap(concurrent_serotypes[random_serotype_index], concurrent_serotypes.back());
                 concurrent_serotypes.erase(concurrent_serotypes.begin() + concurrent_serotypes.size() - 1);
             }
@@ -783,20 +783,12 @@ std::array<double, INIT_NUM_STYPES> Simulation::calcPrev() {
         }
     } // end for each host
 
-    std::array<double, INIT_NUM_STYPES> prevalences;
-    for(int i = 0; i < INIT_NUM_STYPES; i++)
-    {
-        prevalences[i] = serotype_count[i] / (double)N_total;
-        if(i == HFLU_INDEX)
-        {
-            prevalences[i] = I_total_hflu / (double)N_total;
-        }
-    }
+    serotype_count[INIT_NUM_STYPES] = N_total - I_total_pneumo;
 
     std::cout << "\tThere are " << N_total << " kids <5 y old; " << I_total_pneumo << " (" << 100.0*(double)I_total_pneumo / (double)N_total << "%) carry pneumo and "
         << I_total_hflu << " (" << 100.0*(double)I_total_hflu / (double)N_total << "%) carry Hflu" << std::endl;
 
-    return prevalences;
+    return serotype_count;
 }
 
 
