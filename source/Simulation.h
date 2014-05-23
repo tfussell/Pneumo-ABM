@@ -23,7 +23,7 @@ public:
     // MEMBER FUNCTION PROTOTYPES
     void runDemSim();
     void runEpidSim();
-    std::array<double, INIT_NUM_STYPES + 1> runTestEpidSim();
+    std::array<double, INIT_NUM_STYPES> runTestEpidSim();
 
 private:
     // SIMULATION OBJECTS
@@ -63,7 +63,7 @@ private:
     std::string makeBigName(std::string, int);
     std::string makeBiggerName(std::string, int, std::string, int);
     void addEvent(double et, Event::Type event_type, int hid, int s);
-    std::array<int, INIT_NUM_STYPES + 1> calcPrev();
+    std::array<double, INIT_NUM_STYPES> calculateSerotypePrevalenceRates();
 
     // STREAM MANAGEMENT
     void writeDemOutput();

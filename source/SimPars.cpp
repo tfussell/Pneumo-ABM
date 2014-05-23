@@ -106,20 +106,20 @@ void SimPars::initializeDemInput() {
             }
         }
         if(cumulativeSum != 1.0) {
-            std::cout << "Cumulative sum of " << SOCIODEM_FILENAMES[i] << " is " << cumulativeSum << ", not 1. ";
+            //std::cout << "Cumulative sum of " << SOCIODEM_FILENAMES[i] << " is " << cumulativeSum << ", not 1. ";
             double diff = 1.0 - cumulativeSum;
             if(abs(diff) < ERR_EPSILON) {
                 if(diff > 0) {
-                    std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
+                    //std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
                     demPMFs[i][maxIndex] += diff;
                 }
                 else {
-                    std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
+                    //std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
                     demPMFs[i][maxIndex] += diff;
                 }
             }
             else {
-                std::cout << "Difference (" << diff << ") is too great (max acceptable is " << ERR_EPSILON << "). Fix the input file." << std::endl;
+                //std::cout << "Difference (" << diff << ") is too great (max acceptable is " << ERR_EPSILON << "). Fix the input file." << std::endl;
                 throw std::runtime_error("");
             }
         }
@@ -190,18 +190,18 @@ void SimPars::initializeDemInput() {
     }
     double diff = 1.0 - cumulativeSum;
     if(abs(diff) >= 0 && abs(diff) < ERR_EPSILON) {
-        std::cout << "Cumulative sum of " << PARITY_FILENAME << " is " << cumulativeSum << ", not 1." << std::endl;
+        //std::cout << "Cumulative sum of " << PARITY_FILENAME << " is " << cumulativeSum << ", not 1." << std::endl;
         if(diff < 0) {
-            std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
+            //std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
             parity_pmf[maxIndex] += diff;
         }
         else {
-            std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
+            //std::cout << "Adding difference (" << diff << ") to highest rate." << std::endl;
             parity_pmf[maxIndex] += diff;
         }
     }
     else {
-        std::cerr << "Difference (" << diff << ") exceeds acceptable threshold (" << ERR_EPSILON << ")." << std::endl;
+        //std::cerr << "Difference (" << diff << ") exceeds acceptable threshold (" << ERR_EPSILON << ")." << std::endl;
         throw std::runtime_error("");
     }
 
@@ -294,43 +294,9 @@ void SimPars::initializeEpidInput() {
         }
     }
 
-    // ADD BETA
-    std::ifstream betaStream;
-    std::string betaFilename = makeName(treatmentID, simID, "BETA");
-    betaStream.open("../../outputs/" + betaFilename, std::ios::in);
-    if(!betaStream) {
-        std::cerr << "Error reading " << betaFilename << "." << std::endl;
-        throw std::runtime_error("");
-    }
-    double betaVal = 0.0;
-    int ib = 0;
-    while(!betaStream.eof()) {
-        betaStream >> betaVal;
-        if(ib < INIT_NUM_STYPES) {
-            serotypePars[NUM_EPID_FILES][ib] = betaVal;
-            ib++;
-        }
-    }
-
-    std::cout << "Reading out contents of serotypePars: " << std::endl;
-    for(int i = 0; i < NUM_EPID_FILES + 1; i++) {
-        if(i < NUM_EPID_FILES) {
-            std::cout << EPID_FILENAMES[i] << "\t";
-        }
-        else {
-            std::cout << "BETA " << "\t";
-        }
-        for(int j = 0; j < INIT_NUM_STYPES; j++) {
-            std::cout << serotypePars[i][j] << "\t";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-
-
     // XI
     std::ifstream thisFile;
-    std::string XIFile = makeName(treatmentID, simID, "XI");
+    std::string XIFile = makeName(treatmentID, 1, "XI");
     thisFile.open("../../outputs/" + XIFile, std::ios::in);
     if(!thisFile) {
         std::cerr << "Error reading " << XIFile << "." << std::endl;
