@@ -116,7 +116,7 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
         serotype_ranks[i] = 1 + i;
     }
 
-    //serotype_ranks = {{1, 1, 2.3, 5.5, 7.1, 8.3, 7.9, 9.3, 10.3, 10.7, 10.9, 11.3, 11.7, 11.7, 13.1, 13.9, 14.5, 15.5, 16.7, 17.7, 19.9, 19.7, 21.9, 24.9, 25}};
+    serotype_ranks = {{1, 1, 2.3, 5.5, 7.1, 8.3, 7.9, 9.3, 10.3, 10.7, 10.9, 11.3, 11.7, 11.7, 13.1, 13.9, 14.5, 15.5, 16.7, 17.7, 19.9, 19.7, 21.9, 24.9, 25}};
 
     double best_likelihood = std::numeric_limits<double>::lowest();
     std::array<double, INIT_NUM_STYPES> best_betas = betas;
@@ -180,7 +180,10 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
         if(abs(total_prevalence_error) < PREV_ERROR_THOLD)
         {
             fitting_beta = false;
-            std::cout << "Using a value of " << betas[0] << " for beta" << std::endl;
+        }
+        else
+        {
+            fitting_beta = true;
         }
 
         if(fitting_beta)
@@ -199,7 +202,7 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
                 weight *= WARM_UP;
             }
 
-            //adjustBeta(total_prevalence_error, weight, betas);
+            adjustBeta(total_prevalence_error, weight, betas);
 
             previous_total_prevalence_error = total_prevalence_error;
         }
@@ -280,15 +283,11 @@ int main(int argc, const char *argv[])
     boost::random::mt19937_64 rng;
     rng.seed(simNumber);
     boost::random::uniform_int_distribution<int> dist;
-
-    for(int i = 1; i <= 100; i++)
+    double beta = 1;
+    for(int j = 0; j < 12; j++)
     {
-        for(int j = 0; j < 3; j++)
-        {
-            match_prevalence(treatmentNumber, dist(rng), treatment, i / 10.0);
-        }
+        match_prevalence(treatmentNumber, dist(rng), treatment, beta);
     }
-    //run_simulation(simNumber, treatmentNumber);
 }
 
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {
