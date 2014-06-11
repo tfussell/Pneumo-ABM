@@ -116,7 +116,7 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
         serotype_ranks[i] = 1 + i;
     }
 
-    serotype_ranks = {{1, 1, 2.3, 5.5, 7.1, 8.3, 7.9, 9.3, 10.3, 10.7, 10.9, 11.3, 11.7, 11.7, 13.1, 13.9, 14.5, 15.5, 16.7, 17.7, 19.9, 19.7, 21.9, 24.9, 25}};
+    //serotype_ranks = {{1, 1, 2.3, 5.5, 7.1, 8.3, 7.9, 9.3, 10.3, 10.7, 10.9, 11.3, 11.7, 11.7, 13.1, 13.9, 14.5, 15.5, 16.7, 17.7, 19.9, 19.7, 21.9, 24.9, 25}};
 
     double best_likelihood = std::numeric_limits<double>::lowest();
     std::array<double, INIT_NUM_STYPES> best_betas = betas;
@@ -232,7 +232,7 @@ void run_simulation(int simNumber, int treatmentNumber)
 int main(int argc, const char *argv[])
 {
     int treatmentNumber = 1;
-    double treatment = 1;
+    double treatment = 0.3;
     int simNumber = argc > 1 ? std::stoi(argv[1]) : 1;
     std::cout << "Treatment number " << treatmentNumber << ", treatment value " << treatment << ", simulation number " << simNumber << std::endl;
     //printAssumptions();
@@ -283,7 +283,7 @@ int main(int argc, const char *argv[])
     boost::random::mt19937_64 rng;
     rng.seed(simNumber);
     boost::random::uniform_int_distribution<int> dist;
-    double beta = 1;
+    double beta = 0.1;
     for(int j = 0; j < 12; j++)
     {
         match_prevalence(treatmentNumber, dist(rng), treatment, beta);

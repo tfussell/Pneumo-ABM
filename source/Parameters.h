@@ -38,7 +38,7 @@ const double PROGRESS_INTERVAL = 10.0; // % interval at which to report progress
 const int COCOL_AGE_LIMIT = 5; // in *years*; Haemophilus-pneumo and pneumo-pneumo co-colonization stats printed for hosts <COCOL_AGE_LIMIT
 
 // SOCIODEMOGRAPHIC PARAMETERS
-const int N0 = 25000; // initial population size
+const int N0 = 1000; // initial population size
 const double MATURITY_AGE = (double)15.0;
 const int TSTEPS_AGE = 365; // EPID_DELTA_T per age
 const int INIT_NUM_AGE_CATS = 111; // if NO_AGE_ASSORT *not* defined, number of age categories (assume categories are YEARS), older ages borrow rates from NUM_AGES

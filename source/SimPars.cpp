@@ -296,7 +296,7 @@ void SimPars::initializeEpidInput() {
 
     // XI
     std::ifstream thisFile;
-    std::string XIFile = makeName(treatmentID, 1, "XI");
+    std::string XIFile = makeName(treatmentID, 3, "XI");
     thisFile.open("../../outputs/" + XIFile, std::ios::in);
     if(!thisFile) {
         std::cerr << "Error reading " << XIFile << "." << std::endl;
