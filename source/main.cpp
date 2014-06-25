@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
+#include <unordered_map>
 
 #include "Parameters.h"
 #include "Host.h"
@@ -51,18 +52,16 @@ double calculate_likelihood(const std::array<double, INIT_NUM_STYPES> &expected,
 
 void adjust_ranks(const std::array<double, INIT_NUM_STYPES> &errors, std::array<double, INIT_NUM_STYPES> &ranks)
 {
+    const double delta = 5;
+    auto sum_error = std::accumulate(errors.begin(), errors.end(), 0.0, [](double a, double b) { return a + std::abs(b); });
+    std::array<double, INIT_NUM_STYPES> scaled_errors;
+    std::copy(errors.begin(), errors.end(), scaled_errors.begin());
+    std::for_each(scaled_errors.begin(), scaled_errors.end(), [=](double &d) { d *= delta; });
+
     for(int i = 0; i < INIT_NUM_STYPES - 1; i++)
     {
-        if(errors[i] > 0)
-        {
-            ranks[i] = std::min(ranks[i] + 0.1, (double)(INIT_NUM_STYPES - 1));
-        }
-        else
-        {
-            ranks[i] = std::max(ranks[i] - 0.1, 1.0);
-        }
+        ranks[i] = std::max(std::min(ranks[i] + scaled_errors[i], (double)(INIT_NUM_STYPES - 1)), 1.0);
     }
-    std::cout << std::endl;
 }
 
 void adjustBeta(double preve, double w, std::array<double, INIT_NUM_STYPES> &betas)
@@ -116,7 +115,7 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
         serotype_ranks[i] = 1 + i;
     }
 
-    //serotype_ranks = {{1, 1, 2.3, 5.5, 7.1, 8.3, 7.9, 9.3, 10.3, 10.7, 10.9, 11.3, 11.7, 11.7, 13.1, 13.9, 14.5, 15.5, 16.7, 17.7, 19.9, 19.7, 21.9, 24.9, 25}};
+    //serotype_ranks = {{3.7, 4.3, 4.8, 5.2, 6.4, 6.6, 5.6, 6.8, 8, 8.4, 8, 8.8, 8.4, 8.2, 9.4, 11.2, 11, 11.4, 12, 13.8, 14.8, 16.4, 16.8, 18.6, 19.5}};
 
     double best_likelihood = std::numeric_limits<double>::lowest();
     std::array<double, INIT_NUM_STYPES> best_betas = betas;
@@ -124,7 +123,7 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
 
     double total_prevalence_error = 10.0;
     double previous_total_prevalence_error = 1.0;
-    double weight = INIT_WEIGHT;
+    double weight = 0.5632;
 
     std::array<int, INIT_NUM_STYPES + 1> observed_counts = {283, 237, 184, 117, 90, 85, 84, 70, 56, 54, 53, 51, 49, 49, 43, 38, 34, 34, 29, 25, 23, 21, 19, 18, 15, 0, 1079};
     int observed_population = std::accumulate(observed_counts.begin(), observed_counts.end(), 0);
@@ -138,7 +137,7 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
 
     bool fitting_beta = true;
 
-    for(int attempt = 0; attempt < 1; attempt++)
+    for(int attempt = 0; attempt < 100; attempt++)
     {
         SimPars thesePars(treatmentNumber, simNumber);
         thesePars.set_serotype_ranks(serotype_ranks);
@@ -280,14 +279,8 @@ int main(int argc, const char *argv[])
     //std::cout << "Best match to treatment value " << treatment << " is beta = " << startingBeta << " (associated treatment value is " << betaTable[bestTreatment][0] << ")" << std::endl;
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-    boost::random::mt19937_64 rng;
-    rng.seed(simNumber);
-    boost::random::uniform_int_distribution<int> dist;
-    double beta = 0.1;
-    for(int j = 0; j < 12; j++)
-    {
-        match_prevalence(treatmentNumber, dist(rng), treatment, beta);
-    }
+    double beta = 0.0582242;
+    match_prevalence(treatmentNumber, simNumber, treatment, beta);
 }
 
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {
