@@ -15,9 +15,9 @@ typedef age_index dem_array[NUM_SOCIODEM_FILES];
 typedef age_index waifw_array[INIT_NUM_AGE_CATS];
 typedef double kids_index[PARITY_BUFFER];
 
-typedef double stype_index[INIT_NUM_STYPES];
+typedef double stype_index[NUM_STYPES];
 typedef stype_index epid_array[NUM_EPID_FILES + 1];
-typedef stype_index xi_array[INIT_NUM_STYPES];
+typedef stype_index xi_array[NUM_STYPES];
 
 
 class SimPars
@@ -36,8 +36,8 @@ public:
     const double get_normalized_neighbor(int, int) const;
     const double get_Hflu_prob(int) const;
     const double get_reductions(int) const;
-    void set_serotype_ranks(const std::array<double, INIT_NUM_STYPES> &ranks);
-    void set_betas(const std::array<double, INIT_NUM_STYPES> &betas);
+    void set_serotype_ranks(const std::array<double, NUM_STYPES> &ranks);
+    void set_betas(const std::array<double, NUM_STYPES> &betas);
 
 private:
     // SIMPARS OBJECTS
@@ -51,8 +51,8 @@ private:
     kids_index parity_pmf;
     double neighborhoods[NUM_NEIGHBORHOODS][NUM_NEIGHBORHOODS];
     double NNN[NUM_NEIGHBORHOODS][NUM_NEIGHBORHOODS];
-    double Hflu_probs[INIT_NUM_STYPES - 1];
-    double reductions[INIT_NUM_STYPES]; // holds (1 - MAX_REDUCTION) for each strain
+    double Hflu_probs[NUM_STYPES - 1];
+    double reductions[NUM_STYPES]; // holds (1 - MAX_REDUCTION) for each strain
 
     // PRIVATE FUNCTION PROTOTYPES
     void initializeDemInput();

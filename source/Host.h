@@ -21,7 +21,7 @@ public:
     void setPartner(int);
     void setFledge(bool);
     void setInf(bool);
-    void getVaccinated();
+    void getVaccinated(const std::string &vaccine);
 
     // GET FUNCTION PROTOTYPES
     int getAgeInY() const;
@@ -70,9 +70,9 @@ private:
     int partner;
     bool fledge;
     InfectionMap carriage;
-    int immune[INIT_NUM_STYPES];
-    int carriageSummary[INIT_NUM_STYPES];
-    double susc[INIT_NUM_STYPES];
+    int immune[NUM_STYPES];
+    int carriageSummary[NUM_STYPES];
+    double susc[NUM_STYPES];
     bool inf;
     SimPars * simParsPtr;
 

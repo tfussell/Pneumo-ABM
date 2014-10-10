@@ -3,7 +3,7 @@
 #include "SimPars.h"
 #include "Parameters.h"
 
-#define HFLU_INDEX (INIT_NUM_STYPES-1)
+#define HFLU_INDEX (NUM_STYPES-1)
 
 SimPars::SimPars(int tID, int sID) {
     treatmentID = tID;
@@ -242,27 +242,28 @@ void SimPars::initializeDemInput() {
 
 }
 
-void SimPars::set_betas(const std::array<double, INIT_NUM_STYPES> &betas)
+void SimPars::set_betas(const std::array<double, NUM_STYPES> &betas)
 {
-    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+    for(int s = 0; s < NUM_STYPES; s++) {
         serotypePars[BETA_INDEX][s] = betas[s];
     }
 }
 
-void SimPars::set_serotype_ranks(const std::array<double, INIT_NUM_STYPES> &ranks)
+void SimPars::set_serotype_ranks(const std::array<double, NUM_STYPES> &ranks)
 {
     double maxDuration = 220.0;
     double minDuration = BASE_DURATION;
     double rangeDuration = maxDuration - minDuration;
 
-    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+    for(int s = 0; s < NUM_STYPES; s++) {
         if(MAX_REDUCTION > 0) {
             if(s < HFLU_INDEX) {
-                double x = (ranks[s] - 1) / (INIT_NUM_STYPES - 2);
+                double x = (ranks[s] - 1) / (NUM_STYPES - 2);
                 serotypePars[MEAN_DURATION_INDEX][s] = maxDuration - x * rangeDuration;
                 reductions[s] = MAX_REDUCTION * (1 - x);
             }
             else {
+                serotypePars[MEAN_DURATION_INDEX][s] = 1;
                 reductions[s] = 0.0;
             }
         }
@@ -287,7 +288,7 @@ void SimPars::initializeEpidInput() {
         int ii = 0;
         while(!thisFile.eof()) {
             thisFile >> thisVal;
-            if(ii < INIT_NUM_STYPES) {
+            if(ii < NUM_STYPES) {
                 serotypePars[f][ii] = thisVal;
                 ii++;
             }
@@ -296,7 +297,7 @@ void SimPars::initializeEpidInput() {
 
     // XI
     std::ifstream thisFile;
-    std::string XIFile = makeName(treatmentID, 3, "XI");
+    std::string XIFile = makeName(treatmentID, 1, "XI");
     thisFile.open("../../outputs/" + XIFile, std::ios::in);
     if(!thisFile) {
         std::cerr << "Error reading " << XIFile << "." << std::endl;
@@ -308,10 +309,10 @@ void SimPars::initializeEpidInput() {
     int j = 0;
     while(!thisFile.eof()) {
         thisFile >> thisVal;
-        if(ii < INIT_NUM_STYPES * INIT_NUM_STYPES) {
+        if(ii < NUM_STYPES * NUM_STYPES) {
             XI[i][j] = thisVal;
             j++;
-            if(j == INIT_NUM_STYPES) {
+            if(j == NUM_STYPES) {
                 j = 0;
                 i++;
             }
@@ -327,7 +328,7 @@ void SimPars::initializeEpidInput() {
         throw std::runtime_error("");
     }
     i = 0;
-    while(!hfStream.eof() && (i < INIT_NUM_STYPES - 1)) {
+    while(!hfStream.eof() && (i < NUM_STYPES - 1)) {
         hfStream >> thisVal;
         Hflu_probs[i] = thisVal;
         i++;
@@ -338,7 +339,7 @@ void SimPars::initializeEpidInput() {
     double minDuration = BASE_DURATION;
     double rangeDuration = maxDuration - minDuration;
     double thisDuration;
-    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+    for(int s = 0; s < NUM_STYPES; s++) {
         if(MAX_REDUCTION > 0) {
             if(s < HFLU_INDEX) {
                 thisDuration = serotypePars[MEAN_DURATION_INDEX][s];

@@ -13,7 +13,7 @@
 #include "Infection.h"
 #include "SimPars.h"
 
-#define HFLU_INDEX (INIT_NUM_STYPES-1)
+#define HFLU_INDEX (NUM_STYPES-1)
 
 // HOST CONSTRUCTOR & DESTRUCTOR
 Host::Host(double t, double dob, int i, int h, int n, EventQueue & ce, SimPars * spPtr, boost::mt19937& rng) {
@@ -26,7 +26,7 @@ Host::Host(double t, double dob, int i, int h, int n, EventQueue & ce, SimPars *
     partner = 0;
     fledge = false;
     inf = false;
-    for(int s = 0; s < INIT_NUM_STYPES; s++){
+    for(int s = 0; s < NUM_STYPES; s++){
         carriageSummary[s] = 0;
         immune[s] = 0;
         susc[s] = 1.0;
@@ -69,9 +69,22 @@ void Host::setInf(bool b) {
     inf = b;
 }
 
-void Host::getVaccinated() {
-    for(int s = 0; s < NUM_VACCINE_SEROTYPES; s++) {
-        int thisSerotype = VACCINE_SEROTYPES[s];
+void Host::getVaccinated(const std::string &vaccine)
+{
+    for(const auto &vaccine_serotype : VACCINES.at(vaccine))
+    {
+        int thisSerotype = 0;
+
+        for(auto &serotype_name : SerotypeNames)
+        {
+            if(serotype_name == vaccine_serotype)
+            {
+                break;
+            }
+
+            thisSerotype++;
+        }
+
         susc[thisSerotype] = std::min(susc[thisSerotype], 1.0 - VACCINE_EFFICACY);
     }
 }
@@ -131,7 +144,7 @@ bool Host::isInfectedHflu() const {
 
 int Host::totStrains() const {
     int m = 0;
-    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+    for(int s = 0; s < NUM_STYPES; s++) {
         m += (carriageSummary[s] > 0);
     }
     return static_cast<int>(carriage.size());
@@ -354,7 +367,9 @@ void Host::calcSusc(double t) {
                 maxReduction = std::max(maxReduction, simParsPtr->get_reductions(z)); // contribution of current carriage
             }
         }
-        if((t - DOB >= VACCINE_AGE) && (t >= DEM_SIM_LENGTH + VACCINATION_START) && (IN_VACCINE[s] == 1)) { // host vaccinated
+        const auto &vaccine = VACCINES.at("PCV7");
+        bool vaccine_includes_serotype = std::find(vaccine.begin(), vaccine.end(), SerotypeNames[s]) != vaccine.end();
+        if((t - DOB >= VACCINE_AGE) && (t >= DEM_SIM_LENGTH + VACCINATION_START) && vaccine_includes_serotype) { // host vaccinated
             susc[s] = std::min(1.0 - VACCINE_EFFICACY, 1.0 - std::min(1.0, runSum));
         }
         else { // host not yet vaccinated

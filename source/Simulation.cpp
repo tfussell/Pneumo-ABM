@@ -17,7 +17,7 @@
 #include "Rdraws.h"
 #include "Containers.h"
 
-#define HFLU_INDEX (INIT_NUM_STYPES-1)
+#define HFLU_INDEX (NUM_STYPES-1)
 
 Simulation::Simulation(int trt, int sid, SimPars * spPtr) : numInfecteds() {
     simID = sid;
@@ -122,7 +122,7 @@ void Simulation::initOutput() {
     coinfectionHFHistStream.open("../../outputs/" + coinfectionHFHistFile, std::ios::out);
     totCarriageStream.open("../../outputs/" + totCarriageFile, std::ios::out);
 
-    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+    for(int s = 0; s < NUM_STYPES; s++) {
         for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
             infectionStream.open("../../outputs/" + makeBiggerName("infections", s, "neighborhood", n), std::ios::out);
             infectionStream.close();
@@ -192,7 +192,7 @@ void Simulation::writeTheta() {
 void Simulation::writeEpidOutput() {
     // I. Output infections by age to file
     for(int n = 0; n < NUM_NEIGHBORHOODS; n++) { // Fix when adapt to more than one neighborhood
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        for(int s = 0; s < NUM_STYPES; s++) {
             infectionStream.open("../../outputs/" + makeBiggerName("infections", s, "neighborhood", n), std::ios::app);
             for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
                 infectionStream << numInfecteds[a][s][n] << "\t";
@@ -206,7 +206,7 @@ void Simulation::writeEpidOutput() {
     epidTimesStream << epidOutputStrobe << std::endl;
 
     // III. Write infecteds by age to file for each serotype
-    int actualInfecteds[INIT_NUM_AGE_CATS][INIT_NUM_STYPES][NUM_NEIGHBORHOODS] = {0};
+    int actualInfecteds[INIT_NUM_AGE_CATS][NUM_STYPES][NUM_NEIGHBORHOODS] = {0};
 
     // IV. Write coinfections & total carriage to files
     int numCarryingPneumo = 0;
@@ -236,7 +236,7 @@ void Simulation::writeEpidOutput() {
             coinf[thisC]++;
         }
 
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        for(int s = 0; s < NUM_STYPES; s++) {
             if((*fit)->isInfectedZ(s)) {
                 actualInfecteds[(*fit)->getAgeInY()][s][(*fit)->getNeighborhood()]++;
             }
@@ -251,7 +251,7 @@ void Simulation::writeEpidOutput() {
     totCarriageStream << numCarryingPneumo << std::endl;
 
     for(int n = 0; n < NUM_NEIGHBORHOODS; n++) {
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        for(int s = 0; s < NUM_STYPES; s++) {
             infectedStream.open("../../outputs/" + makeBiggerName("infecteds", s, "neighborhood", n), std::ios::app);
             for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
                 infectedStream << actualInfecteds[a][s][n] << "\t";
@@ -294,7 +294,7 @@ void Simulation::runDemSim() {
     std::cout << "\t100% of this component complete." << std::endl;
 }
 
-std::array<double, INIT_NUM_STYPES> Simulation::runTestEpidSim() {
+std::array<double, NUM_STYPES> Simulation::runTestEpidSim() {
     if(allHosts.size() == 0) {
         std::cerr << "No hosts remaining for epidemiological simulation. Cancelling." << std::endl;
         assert(false);
@@ -310,7 +310,7 @@ std::array<double, INIT_NUM_STYPES> Simulation::runTestEpidSim() {
     double nextTimeStep = t + EPID_DELTA_T;
 
     // holds prevalences at strobing periods
-    std::array<double, INIT_NUM_STYPES> serotype_prevalence_rates = {0};
+    std::array<double, NUM_STYPES> serotype_prevalence_rates = {0};
 
     double prevYear = DEM_SIM_LENGTH + TEST_EPID_SIM_LENGTH - (NUM_TEST_SAMPLES * 365.0); // first simulation time to start sampling
     int prevSamples = 0;
@@ -331,7 +331,7 @@ std::array<double, INIT_NUM_STYPES> Simulation::runTestEpidSim() {
             }
             if(prevYear < t) {
                 auto period_prevalence_rates = calculateSerotypePrevalenceRates();
-                for(int i = 0; i < INIT_NUM_STYPES; i++)
+                for(int i = 0; i < NUM_STYPES; i++)
                 {
                     serotype_prevalence_rates[i] += period_prevalence_rates[i] / NUM_TEST_SAMPLES;
                 }
@@ -447,7 +447,7 @@ void Simulation::seedInfections() {
     // .... not considering co-colonizations when calculating duration of infection at this point
     for(auto host : allHosts.get<age_tag>())
     {
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        for(int s = 0; s < NUM_STYPES; s++) {
             double thisRNG = r01(rng);
             if(thisRNG < simParsPtr->get_serotypePar_ij(INIT_INFECTEDS_INDEX, s)) {
                 int id = host->getID();
@@ -471,7 +471,7 @@ void Simulation::killHost(int id) {
         if((*it)->isInfected()) {
             int age = (*it)->getAgeInY();
             int nhood = (*it)->getNeighborhood();
-            for(int s = 0; s < INIT_NUM_STYPES; s++) {
+            for(int s = 0; s < NUM_STYPES; s++) {
                 numInfecteds[age][s][nhood] -= (*it)->isInfectedZ(s);
             }
         }
@@ -485,7 +485,7 @@ void Simulation::ageHost(int id) {
         if((*it)->isInfected()) {
             int age = (*it)->getAgeInY();
             int nhood = (*it)->getNeighborhood();
-            for(int s = 0; s < INIT_NUM_STYPES; s++) {
+            for(int s = 0; s < NUM_STYPES; s++) {
                 numInfecteds[age][s][nhood] -= (*it)->isInfectedZ(s);
                 numInfecteds[age + 1][s][nhood] += (*it)->isInfectedZ(s);
             } // end for each serotype
@@ -586,7 +586,7 @@ void Simulation::partner2Hosts(int hid1, int hid2) {
             int randNeighborhood = (int)(floor((double)NUM_NEIGHBORHOODS*r01(rng)));
             allHosts.modify(it1, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(randNeighborhood); });
             if((*it1)->isInfected()) {
-                for(int s = 0; s < INIT_NUM_STYPES; s++) {
+                for(int s = 0; s < NUM_STYPES; s++) {
                     int infections = (*it1)->isInfectedZ(s);
                     if(infections > 0) {
                         numInfecteds[(*it1)->getAgeInY()][s][nhood1] -= infections;
@@ -631,7 +631,7 @@ void Simulation::partner2Hosts(int hid1, int hid2) {
             allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setHousehold(hhold1); });
             allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(nhood1); });
             if((*it)->isInfected()) {
-                for(int s = 0; s < INIT_NUM_STYPES; s++) {
+                for(int s = 0; s < NUM_STYPES; s++) {
                     int infections = (*it)->isInfectedZ(s);
                     numInfecteds[thisAge][s][origNhood] -= infections;
                     numInfecteds[thisAge][s][nhood1] += infections;
@@ -646,7 +646,7 @@ void Simulation::partner2Hosts(int hid1, int hid2) {
         allHosts.modify(it2, [=](boost::shared_ptr<Host> h) { h->setHousehold(hhold1); });
         allHosts.modify(it2, [=](boost::shared_ptr<Host> h) { h->setNeighborhood(nhood1); });
         if((*it2)->isInfected()) {
-            for(int s = 0; s < INIT_NUM_STYPES; s++) {
+            for(int s = 0; s < NUM_STYPES; s++) {
                 int infections = (*it2)->isInfectedZ(s);
                 numInfecteds[age][s][origNhood] -= infections;
                 numInfecteds[age][s][nhood1] += infections;
@@ -683,7 +683,7 @@ void Simulation::fledgeHost(int id) {
             int age = (*it)->getAgeInY();
             int infections;
             if((*it)->isInfected()) {
-                for(int s = 0; s < INIT_NUM_STYPES; s++) {
+                for(int s = 0; s < NUM_STYPES; s++) {
                     infections = (*it)->isInfectedZ(s);
                     if(infections > 0) {
                         numInfecteds[age][s][currentNhood] -= infections;
@@ -735,15 +735,15 @@ void Simulation::recoverHost(int id, int s) {
 
 void Simulation::vaccinateHost(int id) {
     HostsByID::iterator it = allHosts.find(id);
-    allHosts.modify(it, [](boost::shared_ptr<Host> h) { h->getVaccinated(); });
+    allHosts.modify(it, [](boost::shared_ptr<Host> h) { h->getVaccinated("PCV7"); });
 }
 
-std::array<double, INIT_NUM_STYPES> Simulation::calculateSerotypePrevalenceRates()
+std::array<double, NUM_STYPES> Simulation::calculateSerotypePrevalenceRates()
 {
     // Get population sizes of kids <5
     int N_total = 0;
     int I_total_pneumo = 0;
-    std::array<int, INIT_NUM_STYPES> serotype_counts = {0};
+    std::array<int, NUM_STYPES> serotype_counts = {0};
     int I_total_hflu = 0;
 
     // Now count how many kids in each age group are infected -- note that not sufficient to use numInfecteds, which counts 'effective' number of infecteds 
@@ -759,7 +759,7 @@ std::array<double, INIT_NUM_STYPES> Simulation::calculateSerotypePrevalenceRates
 
             std::vector<int> concurrent_serotypes;
 
-            for(int i = 0; i < INIT_NUM_STYPES; i++)
+            for(int i = 0; i < NUM_STYPES; i++)
             {
                 if(host->isInfectedZ(i))
                 {
@@ -787,9 +787,9 @@ std::array<double, INIT_NUM_STYPES> Simulation::calculateSerotypePrevalenceRates
     std::cout << "\tThere are " << N_total << " kids <5 y old; " << I_total_pneumo << " (" << 100.0*(double)I_total_pneumo / (double)N_total << "%) carry pneumo and "
         << I_total_hflu << " (" << 100.0*(double)I_total_hflu / (double)N_total << "%) carry Hflu" << std::endl;
 
-    std::array<double, INIT_NUM_STYPES> serotype_prevalence_rates;
+    std::array<double, NUM_STYPES> serotype_prevalence_rates;
 
-    for(int i = 0; i < INIT_NUM_STYPES; i++)
+    for(int i = 0; i < NUM_STYPES; i++)
     {
         serotype_prevalence_rates[i] = serotype_counts[i] / (double)N_total;
     }
@@ -807,11 +807,11 @@ void Simulation::calcSI() {
     for(int n = 0; n < INIT_NUM_AGE_CATS; n++) {
         N_total += static_cast<int>(sorted_index.count(n));
     }
-    int I_total[INIT_NUM_STYPES];
-    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+    int I_total[NUM_STYPES];
+    for(int s = 0; s < NUM_STYPES; s++) {
         I_total[s] = 0;
     }
-    for(int s = 0; s < INIT_NUM_STYPES; s++) {
+    for(int s = 0; s < NUM_STYPES; s++) {
         for(int a = 0; a < INIT_NUM_AGE_CATS; a++) {
             I_total[s] += numInfecteds[a][s][nhood];
         }
@@ -820,7 +820,7 @@ void Simulation::calcSI() {
     double rTrans;
     double infectionTime;
     for(auto it : allHosts.get<age_tag>()) {
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        for(int s = 0; s < NUM_STYPES; s++) {
             rTrans = simParsPtr->get_serotypePar_ij(BETA_INDEX, s) * (double)(I_total[s] - it->isInfectedZ(s)) / (double)(N_total - 1); // beta*I/N (excluding self)
             prInf = it->getSusc(s) * (rTrans + simParsPtr->get_serotypePar_ij(IMMIGRATION_INDEX, s));
             prInf = 1.0 - exp(-prInf * EPID_DELTA_T);
@@ -883,7 +883,7 @@ void Simulation::calcSI() {
         hostID = host->getID();
         hostAge = host->getAgeInY();
         nhood = host->getNeighborhood();
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        for(int s = 0; s < NUM_STYPES; s++) {
             susc_z = host->getSusc(s);
             numInfectionsZ = host->isInfectedZ(s);
             rTrans = 0.0;
@@ -946,7 +946,7 @@ void Simulation::calcSI() {
         hostNhood = host->getNeighborhood();
         hholdSize = allHosts.get<household>().count(hostHhold) - 1; // do not count self in household 
 
-        for(int s = 0; s < INIT_NUM_STYPES; s++) {
+        for(int s = 0; s < NUM_STYPES; s++) {
             susc_z = (*it)->getSusc(s);
             numInfectionsZ = (*it)->isInfectedZ(s);
             numHholdInfecteds = 0;
@@ -1087,7 +1087,7 @@ void Simulation::calcSI() {
             }
         } // end for if hholdSize > 0
 
-        for(int s = 0; s < INIT_NUM_STYPES; s++) { // for each serotype
+        for(int s = 0; s < NUM_STYPES; s++) { // for each serotype
             susc_z = (*it)->getSusc(s);
             rTrans = 0.0;
             numInfectionsZ = (*it)->isInfectedZ(s);

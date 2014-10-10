@@ -14,7 +14,7 @@
 #include "Simulation.h"
 #include "SimPars.h"
 
-#define HFLU_INDEX (INIT_NUM_STYPES-1)
+#define HFLU_INDEX (NUM_STYPES-1)
 
 // Function prototypes
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber);
@@ -25,18 +25,32 @@ void printTotalTime(time_t t1, time_t t2);
 
 double log_factorial(double n)
 {
+    if(n == 0)
+    {
+        return log(1.0);
+    }
+
+    if(n < 10)
+    {
+        return lgamma(n + 1);
+    }
+
     return n * log(n) - n + (log(n * (1 + 4 * n * (1 + 2 * n)))) / 6 + log(3.141592653589793238462) / 2;
 }
 
-double calculate_likelihood(const std::array<double, INIT_NUM_STYPES> &expected, const std::array<int, INIT_NUM_STYPES + 1> &observed)
+double calculate_likelihood(const std::array<double, NUM_STYPES> &expected, const std::array<double, NUM_STYPES + 1> &observed)
 {
-    int n = std::accumulate(observed.begin(), observed.end(), 0);
+    double n = std::accumulate(observed.begin(), observed.end(), 0.0);
     double log_likelihood = log_factorial(n);
 
-    double proportion_uninfected = 1 + (0.0001 * (INIT_NUM_STYPES - 1));
-    proportion_uninfected -= std::accumulate(expected.begin(), expected.end(), 0.0);
+    double proportion_uninfected = 1 + (0.0001 * (NUM_STYPES - 1));
 
-    for(int i = 0; i < INIT_NUM_STYPES + 1; i++)
+    for(auto a : expected)
+    {
+        proportion_uninfected -= a + 0.0001;
+    }
+
+    for(int i = 0; i < NUM_STYPES + 1; i++)
     {
         if(i == HFLU_INDEX)
         {
@@ -44,29 +58,56 @@ double calculate_likelihood(const std::array<double, INIT_NUM_STYPES> &expected,
         }
 
         log_likelihood -= log_factorial(observed[i]);
-        log_likelihood += observed[i] * log(i == INIT_NUM_STYPES ? proportion_uninfected : (expected[i] + 0.0001));
+        log_likelihood += observed[i] * log(i == NUM_STYPES ? proportion_uninfected : (expected[i] + 0.0001));
     }
 
     return log_likelihood;
 }
 
-void adjust_ranks(const std::array<double, INIT_NUM_STYPES> &errors, std::array<double, INIT_NUM_STYPES> &ranks)
+void adjust_ranks(const std::array<double, NUM_STYPES> &errors, std::array<double, NUM_STYPES> &ranks)
 {
-    const double delta = 5;
-    auto sum_error = std::accumulate(errors.begin(), errors.end(), 0.0, [](double a, double b) { return a + std::abs(b); });
-    std::array<double, INIT_NUM_STYPES> scaled_errors;
+    const double delta = 20;
+    //auto sum_error = std::accumulate(errors.begin(), errors.end(), 0.0, [](double a, double b) { return a + std::abs(b); });
+    std::array<double, NUM_STYPES> scaled_errors;
     std::copy(errors.begin(), errors.end(), scaled_errors.begin());
     std::for_each(scaled_errors.begin(), scaled_errors.end(), [=](double &d) { d *= delta; });
 
-    for(int i = 0; i < INIT_NUM_STYPES - 1; i++)
+    for(int i = 0; i < NUM_STYPES - 1; i++)
     {
-        ranks[i] = std::max(std::min(ranks[i] + scaled_errors[i], (double)(INIT_NUM_STYPES - 1)), 1.0);
+        ranks[i] += scaled_errors[i];
+
+        double over = 0;
+        if(ranks[i] > (double)(NUM_STYPES - 1))
+        {
+            over = ranks[i] - (double)(NUM_STYPES - 1);
+            ranks[i] = (double)(NUM_STYPES - 1);
+        }
+        else if(ranks[i] < 1.0)
+        {
+            over = 1.0 - ranks[i];
+            ranks[i] = 1.0;
+        }
+
+        if(over == 0)
+        {
+            continue;
+        }
+
+        for(int j = 0; j < NUM_STYPES - 1; j++)
+        {
+            if(j == i)
+            {
+                continue;
+            }
+
+            ranks[j] = std::min(std::max(ranks[j] + over / (NUM_STYPES - 2), 1.0), (double)(NUM_STYPES - 1));
+        }
     }
 }
 
-void adjustBeta(double preve, double w, std::array<double, INIT_NUM_STYPES> &betas)
+void adjustBeta(double preve, double w, std::array<double, NUM_STYPES> &betas)
 {
-    for(int b = 0; b < INIT_NUM_STYPES; b++)
+    for(int b = 0; b < NUM_STYPES; b++)
     {
         if(b != HFLU_INDEX)
         {
@@ -79,57 +120,96 @@ void adjustBeta(double preve, double w, std::array<double, INIT_NUM_STYPES> &bet
     }
 }
 
-void print_state(double beta, std::array<double, INIT_NUM_STYPES> &ranks, 
-    const std::array<double, INIT_NUM_STYPES> &observed_prevalence, 
-    double observed_total_prevalence,
-    const std::array<double, INIT_NUM_STYPES> &expected_prevalence, 
-    double expected_total_prevalence,
-    const std::array<double, INIT_NUM_STYPES> &prevalence_error,
-    double total_prevalence_error,
-    double likelihood,
-    double best_likelihood,
-    double weight)
-{
-    std::cout << "Likelihood=" << likelihood << "(best=" << best_likelihood << ")" << std::endl;
-    std::cout << "Observed prevalence=" << observed_total_prevalence << "; expected prevalence=" << expected_total_prevalence << "; error=" << total_prevalence_error << "; weight = " << weight << std::endl;
-    std::cout << "Contact rate (beta) = " << beta << std::endl;
-    std::cout << "[" << std::endl;
-    for(int z = 0; z < INIT_NUM_STYPES - 1; z++)
-    {
-        std::cout << "\t" << z << " : [" << ranks[z] << ", " << observed_prevalence[z] << ", " << expected_prevalence[z] << ", " << prevalence_error[z] << "]," << std::endl;
-    }
-    std::cout << "]" << std::endl;
-}
-
 void match_prevalence(int treatmentNumber, int simNumber, double treatment, double startingBeta)
 {
     std::cout << "Treatment #" << treatmentNumber << " and simulation #" << simNumber << ":" << std::endl;
 
-    std::array<double, INIT_NUM_STYPES> betas;
+    std::array<double, NUM_STYPES> betas;
     betas.fill(startingBeta);
     betas[HFLU_INDEX] = HFLU_BETA;
 
-    std::array<double, INIT_NUM_STYPES> serotype_ranks;
-    for(int i = 0; i < INIT_NUM_STYPES; i++)
+    std::array<double, NUM_STYPES> serotype_ranks;
+    for(int i = 0; i < NUM_STYPES; i++)
     {
         serotype_ranks[i] = 1 + i;
     }
 
-    //serotype_ranks = {{3.7, 4.3, 4.8, 5.2, 6.4, 6.6, 5.6, 6.8, 8, 8.4, 8, 8.8, 8.4, 8.2, 9.4, 11.2, 11, 11.4, 12, 13.8, 14.8, 16.4, 16.8, 18.6, 19.5}};
+    serotype_ranks = {{1.0,
+        1.863088824,
+        3.094688293,
+        5.297641691,
+        6.574198632,
+        6.852308039,
+        6.909889658,
+        7.796991601,
+        8.882716633,
+        9.059666679,
+        9.150614934,
+        9.337776086,
+        9.532425642,
+        9.532425642,
+        10.1679699,
+        10.76942472,
+        11.31060306,
+        11.31060306,
+        12.08454665,
+        12.80669754,
+        13.21239826,
+        13.65502964,
+        14.14199471,
+        14.40506364,
+        15.29216559,
+        15.98843562,
+        15.98843562,
+        16.37789062,
+        18.3507176,
+        19.0004266,
+        19.75046061,
+        21.72328759,
+        21.72328759,
+        21.72328759,
+        23.1230306,
+        23.1230306,
+        23.1230306,
+        23.1230306,
+        23.1230306,
+        23.1230306,
+        23.1230306,
+        25.09585758,
+        25.09585758,
+        25.09585758,
+        28.46842757,
+        28.46842757,
+        28.46842757,
+        28.46842757,
+        28.46842757,
+        28.46842757,
+        28.46842757,
+        28.46842757,
+        28.46842757,
+        57.0,
+        57.0,
+        57.0,
+        57.0}};
 
     double best_likelihood = std::numeric_limits<double>::lowest();
-    std::array<double, INIT_NUM_STYPES> best_betas = betas;
-    std::array<double, INIT_NUM_STYPES> best_serotype_ranks = serotype_ranks;
+    std::array<double, NUM_STYPES> best_betas = betas;
+    std::array<double, NUM_STYPES> best_serotype_ranks = serotype_ranks;
 
     double total_prevalence_error = 10.0;
     double previous_total_prevalence_error = 1.0;
-    double weight = 0.5632;
+    double weight = 0.8;
 
-    std::array<int, INIT_NUM_STYPES + 1> observed_counts = {283, 237, 184, 117, 90, 85, 84, 70, 56, 54, 53, 51, 49, 49, 43, 38, 34, 34, 29, 25, 23, 21, 19, 18, 15, 0, 1079};
-    int observed_population = std::accumulate(observed_counts.begin(), observed_counts.end(), 0);
-    std::array<double, INIT_NUM_STYPES>  observed_prevalence;
+    std::array<double, NUM_STYPES + 1> observed_counts = {{283.0, 237.0, 184.0, 117.0, 90.0, 85.0, 84.0, 70.0, 56.0, 54.0, 53.0, 51.0, 49.0,
+        49.0, 43.0, 38.0, 34.0, 34.0, 29.0, 25.0, 23.0, 21.0, 19.0, 18.0, 15.0, 13.0, 13.0, 12.0, 8.0, 7.0, 6.0, 4.0,
+        4.0, 4.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0}};
+
+    observed_counts[NUM_STYPES] = 972;
+
+    double observed_population = std::accumulate(observed_counts.begin(), observed_counts.end(), 0.0);
+    std::array<double, NUM_STYPES>  observed_prevalence;
     double observed_total_prevalence = 0;
-    for(int z = 0; z < INIT_NUM_STYPES; z++)
+    for(int z = 0; z < NUM_STYPES; z++)
     {
         observed_prevalence[z] = observed_counts[z] / (double)observed_population;
         observed_total_prevalence += observed_prevalence[z];
@@ -137,7 +217,7 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
 
     bool fitting_beta = true;
 
-    for(int attempt = 0; attempt < 100; attempt++)
+    for(int attempt = 0; attempt < 1000; attempt++)
     {
         SimPars thesePars(treatmentNumber, simNumber);
         thesePars.set_serotype_ranks(serotype_ranks);
@@ -147,9 +227,9 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
         thisSim.runDemSim();
         auto expected_prevalence = thisSim.runTestEpidSim();
 
-        std::array<double, INIT_NUM_STYPES> prevalence_error;
+        std::array<double, NUM_STYPES> prevalence_error;
 
-        for(int i = 0; i < INIT_NUM_STYPES; i++)
+        for(int i = 0; i < NUM_STYPES; i++)
         {
             prevalence_error[i] = expected_prevalence[i] - observed_prevalence[i];
 
@@ -171,10 +251,18 @@ void match_prevalence(int treatmentNumber, int simNumber, double treatment, doub
         double expected_total_prevalence = std::accumulate(expected_prevalence.begin(), expected_prevalence.end(), 0.0);
         total_prevalence_error = expected_total_prevalence - observed_total_prevalence;
 
-        print_state(betas[0], serotype_ranks, observed_prevalence, 
-            observed_total_prevalence, expected_prevalence, 
-            expected_total_prevalence, prevalence_error, 
-            total_prevalence_error, likelihood, best_likelihood, weight);
+        double sum_absolute_errors = std::accumulate(prevalence_error.begin(), prevalence_error.end(), 0.0, [](double t, double d) { return t + std::abs(d); });
+
+        std::cout << "Sum of absolute errors=" << sum_absolute_errors << std::endl;
+        std::cout << "Likelihood=" << likelihood << "(best=" << best_likelihood << ")" << std::endl;
+        std::cout << "Observed prevalence=" << observed_total_prevalence << "; expected prevalence=" << expected_total_prevalence << "; error=" << total_prevalence_error << "; weight = " << weight << std::endl;
+        std::cout << "Contact rate (beta) = " << betas[0] << std::endl;
+        std::cout << "[" << std::endl;
+        for(int z = 0; z < NUM_STYPES - 1; z++)
+        {
+            std::cout << "\t" << SerotypeNames[z] << "(" << z << ")" << " : [" << serotype_ranks[z] << ", " << observed_prevalence[z] << ", " << expected_prevalence[z] << ", " << prevalence_error[z] << "]," << std::endl;
+        }
+        std::cout << "]" << std::endl;
 
         if(abs(total_prevalence_error) < PREV_ERROR_THOLD)
         {
@@ -232,7 +320,7 @@ int main(int argc, const char *argv[])
 {
     int treatmentNumber = 1;
     double treatment = 0.3;
-    int simNumber = argc > 1 ? std::stoi(argv[1]) : 1;
+    int simNumber = 1;// argc > 1 ? std::stoi(argv[1]) : 1;
     std::cout << "Treatment number " << treatmentNumber << ", treatment value " << treatment << ", simulation number " << simNumber << std::endl;
     //printAssumptions();
 
@@ -276,17 +364,16 @@ int main(int argc, const char *argv[])
     }
 
     startingBeta = betaTable[bestTreatment][1];
-    //std::cout << "Best match to treatment value " << treatment << " is beta = " << startingBeta << " (associated treatment value is " << betaTable[bestTreatment][0] << ")" << std::endl;
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-    double beta = 0.0582242;
+    double beta = 0.05;
     match_prevalence(treatmentNumber, simNumber, treatment, beta);
 }
 
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {
-    double thisXI[INIT_NUM_STYPES][INIT_NUM_STYPES];
-    for(int i = 0; i < INIT_NUM_STYPES; i++) {
-        for(int j = 0; j < INIT_NUM_STYPES; j++) {
+    double thisXI[NUM_STYPES][NUM_STYPES];
+    for(int i = 0; i < NUM_STYPES; i++) {
+        for(int j = 0; j < NUM_STYPES; j++) {
             thisXI[i][j] = 0;
         }
     }
@@ -299,10 +386,10 @@ void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {
     std::ofstream xiStream;
     std::string XIFile = makeName(treatmentNumber, simNumber, "XI");
     xiStream.open("../../outputs/" + XIFile, std::ios::out);
-    for(int i = 0; i < INIT_NUM_STYPES; i++) {
-        for(int j = 0; j < INIT_NUM_STYPES; j++) {
+    for(int i = 0; i < NUM_STYPES; i++) {
+        for(int j = 0; j < NUM_STYPES; j++) {
             xiStream << thisXI[i][j];
-            if((j + 1) % INIT_NUM_STYPES == 0) {
+            if((j + 1) % NUM_STYPES == 0) {
                 xiStream << std::endl;
             }
             else {

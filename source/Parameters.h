@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <cmath>
+#include <unordered_map>
 
 // All temporal units are days
-// Haemophilus influenzae is the last serotype with index INIT_NUM_STYPES-1
+// Haemophilus influenzae is the last serotype with index NUM_STYPES-1
 
 // MODEL OPTIONS
 #define MATCH_PREVALENCE // turn off to run with transmission rates in Betas_used.txt and Treatments.txt
@@ -22,7 +24,7 @@ const double APPROX_NOW = -10.0; // pow(10,APPROX_NOW) used for adjusting times 
 
 // ...fitting of transmission rate (beta) (parameters below are ignored unless MATCH_PREVALENCE defined)
 const double TARGET_PREV = 0.40; // target prevalence in kids <5 y
-const double PREV_ERROR_THOLD = 0.025; // allowed error to fit target prevalence (0.01 = target prevalence +/- 1%) 
+const double PREV_ERROR_THOLD = 0.01; // allowed error to fit target prevalence (0.01 = target prevalence +/- 1%) 
 const int NUM_TEST_SAMPLES = 20; // number of epid strobes used to determine if target criterion has been met (prevalence is average of samples) 
 const double COOL_DOWN = 0.8; // decrease in jump size if vacillating around target prevalence prevalence
 const double WARM_UP = 1.1; // increase in jump size if undershooting target prevalence
@@ -38,7 +40,7 @@ const double PROGRESS_INTERVAL = 10.0; // % interval at which to report progress
 const int COCOL_AGE_LIMIT = 5; // in *years*; Haemophilus-pneumo and pneumo-pneumo co-colonization stats printed for hosts <COCOL_AGE_LIMIT
 
 // SOCIODEMOGRAPHIC PARAMETERS
-const int N0 = 1000; // initial population size
+const int N0 = 25000; // initial population size
 const double MATURITY_AGE = (double)15.0;
 const int TSTEPS_AGE = 365; // EPID_DELTA_T per age
 const int INIT_NUM_AGE_CATS = 111; // if NO_AGE_ASSORT *not* defined, number of age categories (assume categories are YEARS), older ages borrow rates from NUM_AGES
@@ -66,7 +68,7 @@ const double ERR_EPSILON = 0.00007; // acceptable remainder in sum of PMFs; if l
 
 // EPIDEMIOLOGICAL PARAMETERS
 // ...initialization
-const int INIT_NUM_STYPES = 26; // = initial number of pneumo serotypes + Haemophilus influenzae
+const int NUM_STYPES = 57 + 1; // = initial number of pneumo serotypes + Haemophilus influenzae
 const int NUM_EPID_FILES = 3;
 const char * const EPID_FILENAMES[NUM_EPID_FILES] = {
     "INIT_INFECTEDS.txt", // initial fraction of population colonized with each serotype and H. influenzae
@@ -94,12 +96,105 @@ const double EPSILON = 0.0001; // future time (in days) to 'instantaneous' recov
 const double VACCINATION_START = (double)100.0*365.0; // days after start of epid simulation to begin vaccination
 const double VACCINE_EFFICACY = 0.6; // percent reduction in susceptibility to serotypes in vaccine (susceptibility is max(1-vaccine efficacy,XI))
 const double VACCINE_AGE = 30 * 6; // in days--host age at which vaccinated
-const int NUM_VACCINE_SEROTYPES = 5; // must match next two variables
-const int VACCINE_SEROTYPES[NUM_VACCINE_SEROTYPES] = {0, 3, 7, 10, 20}; // must match nonzero entries below
-const bool IN_VACCINE[25] = {
-    1, 0, 0, 1, 0,
-    0, 0, 1, 0, 0,
-    1, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0
+
+const std::vector<int> SampleTimes =
+{
+    130 * 365, // 1980
+    131 * 365,
+    132 * 365,
+    133 * 365,
+    134 * 365,
+    135 * 365,
+    136 * 365,
+    137 * 365,
+    138 * 365,
+    139 * 365,
+    140 * 365,
+    141 * 365,
+    142 * 365,
+    143 * 365,
+    144 * 365,
+    145 * 365,
+    146 * 365,
+    147 * 365,
+    148 * 365,
+    149 * 365, // 1999
+    157 * 365, // 2007
+    159 * 365, // 2009
+    164 * 365  // 2014
+};
+
+const std::vector<std::pair<double, std::string>> VaccineSchedule = 
+{
+    {150 * 365.0, "PCV7"},
+    {160 * 365.0, "PCV13"}
+};
+
+const std::unordered_map<std::string, std::vector<std::string>> VACCINES = 
+{
+    {"PCV7", {"4", "6B", "9V", "14", "18C", "19F", "23F"}},
+    {"PCV10", {"4", "6B", "9V", "14", "18C", "19F", "23F", "1", "5", "7F"}},
+    {"PCV13", {"4", "6B", "9V", "14", "18C", "19F", "23F", "1", "5", "7F", "3", "6A", "19A"}}
+};
+
+const std::array<std::string, NUM_STYPES> SerotypeNames = 
+{
+    "19F",
+    "6A",
+    "6B",
+    "23F",
+    "11A",
+    "14",
+    "35B",
+    "23B",
+    "10A",
+    "15B",
+    "19A",
+    "9V",
+    "13",
+    "15A",
+    "15C",
+    "34",
+    "3",
+    "16F",
+    "18C",
+    "19B",
+    "7C",
+    "20",
+    "23A",
+    "21",
+    "35A",
+    "1",
+    "33B",
+    "4",
+    "38",
+    "35F",
+    "10F",
+    "12F",
+    "24F",
+    "33D",
+    "29",
+    "10B",
+    "17F",
+    "18F",
+    "22A",
+    "22F",
+    "28F",
+    "8",
+    "12B",
+    "9L",
+    "5",
+    "31",
+    "40",
+    "11D",
+    "15F",
+    "19C",
+    "28A",
+    "33C",
+    "7F",
+    "18B",
+    "9A",
+    "9N",
+    "non-typable",
+    "Flu"
 };

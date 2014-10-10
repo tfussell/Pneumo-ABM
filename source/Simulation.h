@@ -23,7 +23,7 @@ public:
     // MEMBER FUNCTION PROTOTYPES
     void runDemSim();
     void runEpidSim();
-    std::array<double, INIT_NUM_STYPES> runTestEpidSim();
+    std::array<double, NUM_STYPES> runTestEpidSim();
 
 private:
     // SIMULATION OBJECTS
@@ -39,7 +39,7 @@ private:
     HostContainer allHosts; // shared_ptr to Hosts
     HouseholdContainer allHouseholds; // set of household ids
     // counts number infected with each serotype by age
-    std::array<std::array<std::array<int, NUM_NEIGHBORHOODS>, INIT_NUM_STYPES>, INIT_NUM_AGE_CATS> numInfecteds;
+    std::array<std::array<std::array<int, NUM_NEIGHBORHOODS>, NUM_STYPES>, INIT_NUM_AGE_CATS> numInfecteds;
     EventQueue currentEvents; // current events queue
     SimPars * simParsPtr;
     int treatment;
@@ -63,7 +63,7 @@ private:
     std::string makeBigName(std::string, int);
     std::string makeBiggerName(std::string, int, std::string, int);
     void addEvent(double et, Event::Type event_type, int hid, int s);
-    std::array<double, INIT_NUM_STYPES> calculateSerotypePrevalenceRates();
+    std::array<double, NUM_STYPES> calculateSerotypePrevalenceRates();
 
     // STREAM MANAGEMENT
     void writeDemOutput();
