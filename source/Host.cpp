@@ -200,7 +200,19 @@ void Host::calcLifeHist(double t, EventQueue &cePtr, double initAge, boost::mt19
 #ifdef SIM_PCV
     // Schedule vaccination -- implemented as change to susceptibility starting at VACCINATION_START
     if(VACCINE_AGE < ageAtDeath && VACCINE_AGE > initAge && t >= (DEM_SIM_LENGTH + VACCINATION_START - VACCINE_AGE)) { // means current n-month-olds will get vaccinated starting then
-        addEvent(t + VACCINE_AGE - initAge, Event::Type::Vaccination, id, cePtr);
+		int active_vaccine_index = -1;
+		for (std::size_t i = 0; i < VaccineSchedule.size(); i++)
+		{
+			if (t > VaccineSchedule[i].first)
+			{
+				active_vaccine_index = i;
+			}
+		}
+		if (active_vaccine_index == -1)
+		{
+			throw std::runtime_error("no active vaccine");
+		}
+        addEvent(t + VACCINE_AGE - initAge, Event::Type::Vaccination, id, active_vaccine_index, cePtr);
     }
 #endif  
 
@@ -282,7 +294,7 @@ void Host::becomeInfected(int s, double currentTime, EventQueue & ce, boost::mt1
                 newRecTime = currentTime + calcRecovery(s, currentTime, infTime, rng);
             } // end for pneumo and hflu colonization options
             while(ce.count(Event(newRecTime)) == 1) {
-                std::cout << "\tHost id " << id << " is adjusting new recovery time to strain " << s << " to avoid collision with pre-existing events." << std::endl;
+                //std::cout << "\tHost id " << id << " is adjusting new recovery time to strain " << s << " to avoid collision with pre-existing events." << std::endl;
                 newRecTime += pow(10, APPROX_NOW);
             }
             (iter->second).recT = newRecTime;

@@ -29,7 +29,10 @@ Simulation::Simulation(int trt, int sid, SimPars * spPtr) : numInfecteds() {
     idCtr = 1;
     hholdCtr = 1;
     demComplete = 0.0;
-    rng.seed((unsigned int)sid);
+    //auto t = time(NULL);
+    //std::ofstream f("seeds.txt", std::ios::app);
+    //f << t << std::endl;
+    rng.seed(trt);
 
     // Set up multinomial to determine # of households in each size category
     // and # of people in each age class
@@ -167,7 +170,7 @@ void Simulation::writeDemOutput() {
             maxSize = hhSize;
         }
         if(hhSize > floor(0.8*(double)HHOLD_SIZE_BUFFER)) {
-            std::cout << "Set MAX_HHOLD_SIZE to be larger. Encountered household with " << hhSize << " members." << std::endl;
+            //std::cout << "Set MAX_HHOLD_SIZE to be larger. Encountered household with " << hhSize << " members." << std::endl;
             assert(hhSize < HHOLD_SIZE_BUFFER);
         }
         households[hhSize - 1]++;
@@ -331,11 +334,13 @@ std::array<double, NUM_STYPES> Simulation::runTestEpidSim() {
             }
             if(prevYear < t) {
                 auto period_prevalence_rates = calculateSerotypePrevalenceRates();
+				std::cout << "\tOutputting prevalence sample #" << prevSamples + 1 << std::endl;// << "; prevalence of pneumo under 5 is " << std::accumulate(prevalences[prevSamples].begin(), prevalences[prevSamples].end(), 0.0) << std::endl;
                 for(int i = 0; i < NUM_STYPES; i++)
                 {
-                    serotype_prevalence_rates[i] += period_prevalence_rates[i] / NUM_TEST_SAMPLES;
+                    //serotype_prevalence_rates[i] += period_prevalence_rates[i] / NUM_TEST_SAMPLES;
+					std::cout << period_prevalence_rates[i] << " ";
                 }
-                //std::cout << "\tOutputting prevalence sample #" << prevSamples + 1 << "; prevalence of pneumo under 5 is " << std::accumulate(prevalences[prevSamples].begin(), prevalences[prevSamples].end(), 0.0) << std::endl;
+				std::cout << std::endl;
                 prevSamples++;
                 prevYear += 365.0;
             }
@@ -434,7 +439,7 @@ void Simulation::executeEvent(Event & te) {
         recoverHost(te.hostID, te.s);
         break;
     case Event::Type::Vaccination:
-        vaccinateHost(te.hostID);
+        vaccinateHost(te.hostID, VaccineSchedule[te.s].second);
         break;
     default:
         throw std::runtime_error("invalid event");
@@ -733,9 +738,9 @@ void Simulation::recoverHost(int id, int s) {
     }
 }
 
-void Simulation::vaccinateHost(int id) {
+void Simulation::vaccinateHost(int id, const std::string &vaccine) {
     HostsByID::iterator it = allHosts.find(id);
-    allHosts.modify(it, [](boost::shared_ptr<Host> h) { h->getVaccinated("PCV7"); });
+    allHosts.modify(it, [=](boost::shared_ptr<Host> h) { h->getVaccinated(vaccine); });
 }
 
 std::array<double, NUM_STYPES> Simulation::calculateSerotypePrevalenceRates()
@@ -784,8 +789,8 @@ std::array<double, NUM_STYPES> Simulation::calculateSerotypePrevalenceRates()
         }
     } // end for each host
 
-    std::cout << "\tThere are " << N_total << " kids <5 y old; " << I_total_pneumo << " (" << 100.0*(double)I_total_pneumo / (double)N_total << "%) carry pneumo and "
-        << I_total_hflu << " (" << 100.0*(double)I_total_hflu / (double)N_total << "%) carry Hflu" << std::endl;
+    //std::cout << "\tThere are " << N_total << " kids <5 y old; " << I_total_pneumo << " (" << 100.0*(double)I_total_pneumo / (double)N_total << "%) carry pneumo and "
+    //    << I_total_hflu << " (" << 100.0*(double)I_total_hflu / (double)N_total << "%) carry Hflu" << std::endl;
 
     std::array<double, NUM_STYPES> serotype_prevalence_rates;
 
@@ -1162,7 +1167,7 @@ std::string Simulation::makeBiggerName(std::string suffix1, int index1, std::str
 void Simulation::addEvent(double et, Event::Type event_type, int hid, int s) {
     while(currentEvents.find(Event(et)) != currentEvents.end()) {
         et += pow(10, APPROX_NOW);
-        std::cout << "\tSimulation is adjusting event time to prevent collision (host id " << hid << ", event id " << int(event_type) << ", strain " << s << ", event time " << et << ").\n";
+        //std::cout << "\tSimulation is adjusting event time to prevent collision (host id " << hid << ", event id " << int(event_type) << ", strain " << s << ", event time " << et << ").\n";
     }
     Event thisEvent(et, event_type, hid, s);
     currentEvents.insert(thisEvent);

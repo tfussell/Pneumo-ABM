@@ -56,7 +56,7 @@ private:
     void birthHost(int id);
     void infectHost(int id, int s);
     void recoverHost(int id, int s);
-    void vaccinateHost(int id);
+    void vaccinateHost(int id, const std::string &vaccine);
     void calcSI();
     std::string d2str(double d);
     std::string makeName(std::string s);

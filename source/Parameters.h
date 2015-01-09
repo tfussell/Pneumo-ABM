@@ -11,7 +11,7 @@
 #define MATCH_PREVALENCE // turn off to run with transmission rates in Betas_used.txt and Treatments.txt
 #define NO_HHOLDS // if defined, contact rates are independent of household status
 #define NO_AGE_ASSORT // if defined, contact rates are independent of host age
-//#define SIM_PCV // if on, introduces vaccine
+#define SIM_PCV // if on, introduces vaccine
 
 const int MAX_MATCH_ATTEMPTS = 1000;
 
@@ -25,11 +25,11 @@ const double APPROX_NOW = -10.0; // pow(10,APPROX_NOW) used for adjusting times 
 // ...fitting of transmission rate (beta) (parameters below are ignored unless MATCH_PREVALENCE defined)
 const double TARGET_PREV = 0.40; // target prevalence in kids <5 y
 const double PREV_ERROR_THOLD = 0.01; // allowed error to fit target prevalence (0.01 = target prevalence +/- 1%) 
-const int NUM_TEST_SAMPLES = 20; // number of epid strobes used to determine if target criterion has been met (prevalence is average of samples) 
+const int NUM_TEST_SAMPLES = 30; // number of epid strobes used to determine if target criterion has been met (prevalence is average of samples) 
 const double COOL_DOWN = 0.8; // decrease in jump size if vacillating around target prevalence prevalence
 const double WARM_UP = 1.1; // increase in jump size if undershooting target prevalence
 const double TEMP_THOLD = 0.7; // if prevalence is less that TEMP_THOLD fraction of target, jump size (temperature of search) increases (WARM_UP)
-const double TEST_EPID_SIM_LENGTH = (double)150 * 365.0; // duration of epid dynamics for simulations to fit prevalence
+const double TEST_EPID_SIM_LENGTH = (double)121 * 365.0; // duration of epid dynamics for simulations to fit prevalence
 const double INIT_WEIGHT = 0.8; // initial coefficient for jump size (jump size = INIT_WEIGHT * difference in prevalence)
 
 // ...output:
@@ -40,7 +40,7 @@ const double PROGRESS_INTERVAL = 10.0; // % interval at which to report progress
 const int COCOL_AGE_LIMIT = 5; // in *years*; Haemophilus-pneumo and pneumo-pneumo co-colonization stats printed for hosts <COCOL_AGE_LIMIT
 
 // SOCIODEMOGRAPHIC PARAMETERS
-const int N0 = 25000; // initial population size
+const int N0 = 40000; // initial population size
 const double MATURITY_AGE = (double)15.0;
 const int TSTEPS_AGE = 365; // EPID_DELTA_T per age
 const int INIT_NUM_AGE_CATS = 111; // if NO_AGE_ASSORT *not* defined, number of age categories (assume categories are YEARS), older ages borrow rates from NUM_AGES
@@ -99,40 +99,38 @@ const double VACCINE_AGE = 30 * 6; // in days--host age at which vaccinated
 
 const std::vector<int> SampleTimes =
 {
-    130 * 365, // 1980
-    131 * 365,
-    132 * 365,
-    133 * 365,
-    134 * 365,
-    135 * 365,
-    136 * 365,
-    137 * 365,
-    138 * 365,
-    139 * 365,
-    140 * 365,
-    141 * 365,
-    142 * 365,
-    143 * 365,
-    144 * 365,
-    145 * 365,
-    146 * 365,
-    147 * 365,
-    148 * 365,
-    149 * 365, // 1999
-    157 * 365, // 2007
-    159 * 365, // 2009
-    164 * 365  // 2014
+    100 * 365,
+    101 * 365,
+    102 * 365,
+    103 * 365,
+    104 * 365,
+    105 * 365,
+    106 * 365,
+    107 * 365,
+    108 * 365,
+    109 * 365,
+    110 * 365,
+    111 * 365,
+    112 * 365,
+    113 * 365,
+    114 * 365,
+    115 * 365,
+    116 * 365,
+    117 * 365,
+    118 * 365,
+    119 * 365,
+    120 * 365
 };
 
 const std::vector<std::pair<double, std::string>> VaccineSchedule = 
 {
-    {150 * 365.0, "PCV7"},
-    {160 * 365.0, "PCV13"}
+    {100 * 365.0, "PCV7"},
+    {110 * 365.0, "PCV13"}
 };
 
 const std::unordered_map<std::string, std::vector<std::string>> VACCINES = 
 {
-    {"PCV7", {"4", "6B", "9V", "14", "18C", "19F", "23F"}},
+    {"PCV7", {"4", "6A", "6B", "9V", "14", "18C", "19F", "23F"}},
     {"PCV10", {"4", "6B", "9V", "14", "18C", "19F", "23F", "1", "5", "7F"}},
     {"PCV13", {"4", "6B", "9V", "14", "18C", "19F", "23F", "1", "5", "7F", "3", "6A", "19A"}}
 };
