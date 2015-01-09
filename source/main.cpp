@@ -134,7 +134,7 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int 
         serotype_ranks[i] = 1 + i;
     }
 
-   // serotype_ranks = external_ranks;
+    serotype_ranks = external_ranks;
 
     double best_likelihood = std::numeric_limits<double>::lowest();
     std::array<double, NUM_STYPES> best_betas = betas;
@@ -144,11 +144,9 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int 
     double previous_total_prevalence_error = 1.0;
     double weight = 0.8;
 
-    std::array<double, NUM_STYPES + 1> observed_counts = {{283.0, 237.0, 184.0, 117.0, 90.0, 85.0, 84.0, 70.0, 56.0, 54.0, 53.0, 51.0, 49.0,
-        49.0, 43.0, 38.0, 34.0, 34.0, 29.0, 25.0, 23.0, 21.0, 19.0, 18.0, 15.0, 13.0, 13.0, 12.0, 8.0, 7.0, 6.0, 4.0,
-        4.0, 4.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0}};
+	std::array<double, NUM_STYPES + 1> observed_counts = { { 26.7751938, 15.82170543, 14.60465116, 13.3875969, 10.95348837, 9.736434109, 8.519379845, 4.868217054, 4.868217054, 4.868217054, 4.868217054, 3.651162791, 3.651162791, 3.651162791, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
 
-    observed_counts[NUM_STYPES] = 972;
+    observed_counts[NUM_STYPES] = 403;
 
     double observed_population = std::accumulate(observed_counts.begin(), observed_counts.end(), 0.0);
     std::array<double, NUM_STYPES>  observed_prevalence;
@@ -161,6 +159,7 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int 
 
     bool fitting_beta = true;
 
+	/*
 	auto in_bounds = [](const std::array<double, NUM_STYPES> &expected_prevalence)
 	{
 		static const std::array<double, NUM_STYPES - 1> min_stop = { {
@@ -291,6 +290,7 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int 
 
 		return true;
 	};
+	*/
 
 	while (true)
 	{
@@ -348,7 +348,7 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int 
             fitting_beta = true;
         }
 
-		if (in_bounds(expected_prevalence)) break;
+		//if (in_bounds(expected_prevalence)) break;
 
         if(fitting_beta)
         {
@@ -448,7 +448,7 @@ int main(int argc, const char *argv[])
     startingBeta = betaTable[bestTreatment][1];
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-    double beta = 0.0583273/*0.0580585*/;
+    double beta = 0.0180585;
     match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta);
 }
 

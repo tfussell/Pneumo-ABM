@@ -11,7 +11,7 @@
 #define MATCH_PREVALENCE // turn off to run with transmission rates in Betas_used.txt and Treatments.txt
 #define NO_HHOLDS // if defined, contact rates are independent of household status
 #define NO_AGE_ASSORT // if defined, contact rates are independent of host age
-#define SIM_PCV // if on, introduces vaccine
+//#define SIM_PCV // if on, introduces vaccine
 
 const int MAX_MATCH_ATTEMPTS = 1000;
 
@@ -40,7 +40,7 @@ const double PROGRESS_INTERVAL = 10.0; // % interval at which to report progress
 const int COCOL_AGE_LIMIT = 5; // in *years*; Haemophilus-pneumo and pneumo-pneumo co-colonization stats printed for hosts <COCOL_AGE_LIMIT
 
 // SOCIODEMOGRAPHIC PARAMETERS
-const int N0 = 40000; // initial population size
+const int N0 = 5000; // initial population size
 const double MATURITY_AGE = (double)15.0;
 const int TSTEPS_AGE = 365; // EPID_DELTA_T per age
 const int INIT_NUM_AGE_CATS = 111; // if NO_AGE_ASSORT *not* defined, number of age categories (assume categories are YEARS), older ages borrow rates from NUM_AGES
@@ -68,7 +68,7 @@ const double ERR_EPSILON = 0.00007; // acceptable remainder in sum of PMFs; if l
 
 // EPIDEMIOLOGICAL PARAMETERS
 // ...initialization
-const int NUM_STYPES = 57 + 1; // = initial number of pneumo serotypes + Haemophilus influenzae
+const int NUM_STYPES = 47 + 1; // = initial number of pneumo serotypes + Haemophilus influenzae
 const int NUM_EPID_FILES = 3;
 const char * const EPID_FILENAMES[NUM_EPID_FILES] = {
     "INIT_INFECTEDS.txt", // initial fraction of population colonized with each serotype and H. influenzae
@@ -137,62 +137,52 @@ const std::unordered_map<std::string, std::vector<std::string>> VACCINES =
 
 const std::array<std::string, NUM_STYPES> SerotypeNames = 
 {
-    "19F",
-    "6A",
-    "6B",
-    "23F",
-    "11A",
-    "14",
-    "35B",
-    "23B",
-    "10A",
-    "15B",
-    "19A",
-    "9V",
-    "13",
-    "15A",
-    "15C",
-    "34",
-    "3",
-    "16F",
-    "18C",
-    "19B",
-    "7C",
-    "20",
-    "23A",
-    "21",
-    "35A",
-    "1",
-    "33B",
-    "4",
-    "38",
-    "35F",
-    "10F",
-    "12F",
-    "24F",
-    "33D",
-    "29",
-    "10B",
-    "17F",
-    "18F",
-    "22A",
-    "22F",
-    "28F",
-    "8",
-    "12B",
-    "9L",
-    "5",
-    "31",
-    "40",
-    "11D",
-    "15F",
-    "19C",
-    "28A",
-    "33C",
-    "7F",
-    "18B",
-    "9A",
-    "9N",
-    "non-typable",
+	"6A",
+	"23F",
+	"19F",
+	"6B",
+	"11A",
+	"15B/C",
+	"19A",
+	"14",
+	"22F",
+	"35B",
+	"9A",
+	"18C",
+	"NT",
+	"10",
+	"6C",
+	"9N",
+	"23A",
+	"35F",
+	"23B",
+	"3",
+	"34",
+	"4",
+	"31",
+	"15A",
+	"38",
+	"15F",
+	"7",
+	"35A/B",
+	"25A",
+	"33",
+	"10A",
+	"7F",
+	"16F",
+	"33F",
+	"Pool I",
+	"17F",
+	"21",
+	"37",
+	"9V",
+	"7C",
+	"33A",
+	"13",
+	"18F",
+	"36",
+	"20",
+	"24F",
+	"10B",
     "Flu"
 };
