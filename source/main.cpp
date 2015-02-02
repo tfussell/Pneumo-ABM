@@ -120,10 +120,8 @@ void adjustBeta(double preve, double w, std::array<double, NUM_STYPES> &betas)
     }
 }
 
-void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int treatmentNumber, int simNumber, double treatment, double startingBeta)
+void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int treatmentNumber, int simNumber, double treatment, double startingBeta, double serogroupCrossImmunity)
 {
-    //std::cout << "Treatment #" << treatmentNumber << " and simulation #" << simNumber << ":" << std::endl;
-
     std::array<double, NUM_STYPES> betas;
     betas.fill(startingBeta);
     betas[HFLU_INDEX] = HFLU_BETA;
@@ -159,144 +157,12 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int 
 
     bool fitting_beta = true;
 
-	/*
-	auto in_bounds = [](const std::array<double, NUM_STYPES> &expected_prevalence)
-	{
-		static const std::array<double, NUM_STYPES - 1> min_stop = { {
-				0.088872449380254,
-				0.073536416538417,
-				0.056011852441207,
-				0.034188101414215,
-				0.025557987103319,
-				0.023975128446894,
-				0.023659234193544,
-				0.019263454231972,
-				0.014928520162317,
-				0.014315434427329,
-				0.014009559187710,
-				0.013399206774066,
-				0.012790809465225,
-				0.012790809465225,
-				0.010978605025572,
-				0.009485614546237,
-				0.008304699165959,
-				0.008304699165959,
-				0.006849012305781,
-				0.005704588602655,
-				0.005140538886973,
-				0.004582886283969,
-				0.004032566044146,
-				0.003760514787317,
-				0.002959044722980,
-				0.002439490134574,
-				0.002439490134574,
-				0.002185148997272,
-				0.001216898229325,
-				0.000991529257695,
-				0.000775697150860,
-				0.000383884541820,
-				0.000383884541820,
-				0.000383884541820,
-				0.000217895296624,
-				0.000217895296624,
-				0.000217895296624,
-				0.000217895296624,
-				0.000217895296624,
-				0.000217895296624,
-				0.000217895296624,
-				0.000085296338325,
-				0.000085296338325,
-				0.000085296338325,
-				0.000008914681385,
-				0.000008914681385,
-				0.000008914681385,
-				0.000008914681385,
-				0.000008914681385,
-				0.000008914681385,
-				0.000008914681385,
-				0.000008914681385,
-				0.000008914681385,
-				0.000000000000000,
-				0.000000000000000,
-				0.000000000000000,
-				0.000000000000000 } };
-
-		static const std::array<double, NUM_STYPES - 1> max_stop = { {
-				0.111256066355603,
-				0.094232887945256,
-				0.074474850534474,
-				0.049170387167968,
-				0.038810363450686,
-				0.036876749335286,
-				0.036489359861464,
-				0.031039632574562,
-				0.025530276287365,
-				0.024737177717045,
-				0.024339977652025,
-				0.023544215824669,
-				0.022746551379733,
-				0.022746551379733,
-				0.020340943746101,
-				0.018319633758304,
-				0.016689587309438,
-				0.016689587309438,
-				0.014632395091039,
-				0.012967439515854,
-				0.012127222488374,
-				0.011280974318645,
-				0.010427850017154,
-				0.009998387337851,
-				0.008696404901838,
-				0.007814884055676,
-				0.007814884055676,
-				0.007369195582954,
-				0.005542834682162,
-				0.005071772367006,
-				0.004592693147404,
-				0.003602232109533,
-				0.003602232109533,
-				0.003602232109533,
-				0.003083934870743,
-				0.003083934870743,
-				0.003083934870743,
-				0.003083934870743,
-				0.003083934870743,
-				0.003083934870743,
-				0.003083934870743,
-				0.002541565200340,
-				0.002541565200340,
-				0.002541565200340,
-				0.001960267967797,
-				0.001960267967797,
-				0.001960267967797,
-				0.001960267967797,
-				0.001960267967797,
-				0.001960267967797,
-				0.001960267967797,
-				0.001960267967797,
-				0.001960267967797,
-				0.001298058009173,
-				0.001298058009173,
-				0.001298058009173,
-				0.001298058009173 } };
-
-		for (int z = 0; z < NUM_STYPES - 1; z++)
-		{
-			if (expected_prevalence[z] < min_stop[z] || expected_prevalence[z] > max_stop[z])
-			{
-				return false;
-			}
-		}
-
-		return true;
-	};
-	*/
-
 	while (true)
 	{
         SimPars thesePars(treatmentNumber, simNumber);
         thesePars.set_serotype_ranks(serotype_ranks);
         thesePars.set_betas(betas);
+		thesePars.set_serogroup_cross_immunity(serogroupCrossImmunity);
         Simulation thisSim(treatmentNumber, simNumber, &thesePars);
 
         thisSim.runDemSim();
@@ -448,8 +314,9 @@ int main(int argc, const char *argv[])
     startingBeta = betaTable[bestTreatment][1];
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-    double beta = 0.0180585;
-    match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta);
+	double beta = 0.034123;
+	double serogroup_cross_immunity = 0.1;
+    match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta, serogroup_cross_immunity);
 }
 
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {

@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdlib>
 
 #include "SimPars.h"
@@ -247,6 +248,43 @@ void SimPars::set_betas(const std::array<double, NUM_STYPES> &betas)
     for(int s = 0; s < NUM_STYPES; s++) {
         serotypePars[BETA_INDEX][s] = betas[s];
     }
+}
+
+void SimPars::set_serogroup_cross_immunity(double value)
+{
+	std::vector<std::string> serogroups = { "6", "23", "19" };
+	std::unordered_map<std::string, std::vector<std::size_t>> serogroup_indices;
+
+	for (std::size_t i = 0; i < NUM_STYPES; i++)
+	{
+		auto name = SerotypeNames[i];
+		std::string group;
+
+		for (std::size_t j = 0; j < name.size(); j++)
+		{
+			if (name[j] < '0' || name[j] > '9') break;
+			group.append(1, name[j]);
+		}
+
+		if (group.size() == 0) continue;
+
+		if (std::find(serogroups.begin(), serogroups.end(), group) != serogroups.end())
+		{
+			serogroup_indices[group].push_back(i);
+		}
+	}
+
+	for (auto &group : serogroup_indices)
+	{
+		for (auto &serotype_index : group.second)
+		{
+			for (auto &serotype_index_2 : group.second)
+			{
+				if (serotype_index == serotype_index_2) continue;
+				XI[serotype_index][serotype_index_2] = value;
+			}
+		}
+	}
 }
 
 void SimPars::set_serotype_ranks(const std::array<double, NUM_STYPES> &ranks)

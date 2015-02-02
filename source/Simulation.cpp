@@ -337,7 +337,7 @@ std::array<double, NUM_STYPES> Simulation::runTestEpidSim() {
 				std::cout << "\tOutputting prevalence sample #" << prevSamples + 1 << std::endl;// << "; prevalence of pneumo under 5 is " << std::accumulate(prevalences[prevSamples].begin(), prevalences[prevSamples].end(), 0.0) << std::endl;
                 for(int i = 0; i < NUM_STYPES; i++)
                 {
-                    //serotype_prevalence_rates[i] += period_prevalence_rates[i] / NUM_TEST_SAMPLES;
+                    serotype_prevalence_rates[i] += period_prevalence_rates[i] / NUM_TEST_SAMPLES;
 					std::cout << period_prevalence_rates[i] << " ";
                 }
 				std::cout << std::endl;

@@ -38,6 +38,7 @@ public:
     const double get_reductions(int) const;
     void set_serotype_ranks(const std::array<double, NUM_STYPES> &ranks);
     void set_betas(const std::array<double, NUM_STYPES> &betas);
+	void set_serogroup_cross_immunity(double value);
 
 private:
     // SIMPARS OBJECTS

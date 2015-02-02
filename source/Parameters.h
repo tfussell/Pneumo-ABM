@@ -40,7 +40,7 @@ const double PROGRESS_INTERVAL = 10.0; // % interval at which to report progress
 const int COCOL_AGE_LIMIT = 5; // in *years*; Haemophilus-pneumo and pneumo-pneumo co-colonization stats printed for hosts <COCOL_AGE_LIMIT
 
 // SOCIODEMOGRAPHIC PARAMETERS
-const int N0 = 5000; // initial population size
+const int N0 = 80000; // initial population size
 const double MATURITY_AGE = (double)15.0;
 const int TSTEPS_AGE = 365; // EPID_DELTA_T per age
 const int INIT_NUM_AGE_CATS = 111; // if NO_AGE_ASSORT *not* defined, number of age categories (assume categories are YEARS), older ages borrow rates from NUM_AGES
@@ -94,7 +94,7 @@ const double EPSILON = 0.0001; // future time (in days) to 'instantaneous' recov
 
 // ...vaccination (ignored unless SIM_PCV defined)
 const double VACCINATION_START = (double)100.0*365.0; // days after start of epid simulation to begin vaccination
-const double VACCINE_EFFICACY = 0.6; // percent reduction in susceptibility to serotypes in vaccine (susceptibility is max(1-vaccine efficacy,XI))
+const double VACCINE_EFFICACY = 0.5; // percent reduction in susceptibility to serotypes in vaccine (susceptibility is max(1-vaccine efficacy,XI))
 const double VACCINE_AGE = 30 * 6; // in days--host age at which vaccinated
 
 const std::vector<int> SampleTimes =
