@@ -439,7 +439,7 @@ void Simulation::executeEvent(Event & te) {
         recoverHost(te.hostID, te.s);
         break;
     case Event::Type::Vaccination:
-        vaccinateHost(te.hostID, VaccineSchedule[te.s].second);
+        vaccinateHost(te.hostID, te.s == 0 ? "PCV7" : "PCV13");
         break;
     default:
         throw std::runtime_error("invalid event");

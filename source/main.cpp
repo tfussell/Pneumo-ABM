@@ -120,7 +120,9 @@ void adjustBeta(double preve, double w, std::array<double, NUM_STYPES> &betas)
     }
 }
 
-void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int treatmentNumber, int simNumber, double treatment, double startingBeta, double serogroupCrossImmunity)
+void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, 
+	int treatmentNumber, int simNumber, double /*treatment*/, 
+	double startingBeta, double serogroupCrossImmunity)
 {
     std::array<double, NUM_STYPES> betas;
     betas.fill(startingBeta);
@@ -157,7 +159,7 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, int 
 
     bool fitting_beta = true;
 
-	while (true)
+	for (;;)
 	{
         SimPars thesePars(treatmentNumber, simNumber);
         thesePars.set_serotype_ranks(serotype_ranks);
@@ -314,7 +316,7 @@ int main(int argc, const char *argv[])
     startingBeta = betaTable[bestTreatment][1];
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-	double beta = 0.034123;
+	double beta = 0.0414137;
 	double serogroup_cross_immunity = 0.1;
     match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta, serogroup_cross_immunity);
 }

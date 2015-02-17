@@ -11,9 +11,7 @@
 #define MATCH_PREVALENCE // turn off to run with transmission rates in Betas_used.txt and Treatments.txt
 #define NO_HHOLDS // if defined, contact rates are independent of household status
 #define NO_AGE_ASSORT // if defined, contact rates are independent of host age
-//#define SIM_PCV // if on, introduces vaccine
-
-const int MAX_MATCH_ATTEMPTS = 1000;
+#define SIM_PCV // if on, introduces vaccine
 
 // SIMULATION PARAMETERS
 // ...input:
@@ -23,13 +21,12 @@ const double EPID_DELTA_T = (double)1.0; // time step for calculating force of c
 const double APPROX_NOW = -10.0; // pow(10,APPROX_NOW) used for adjusting times to prevent event collisions
 
 // ...fitting of transmission rate (beta) (parameters below are ignored unless MATCH_PREVALENCE defined)
-const double TARGET_PREV = 0.40; // target prevalence in kids <5 y
 const double PREV_ERROR_THOLD = 0.01; // allowed error to fit target prevalence (0.01 = target prevalence +/- 1%) 
-const int NUM_TEST_SAMPLES = 30; // number of epid strobes used to determine if target criterion has been met (prevalence is average of samples) 
+const int NUM_TEST_SAMPLES = 20; // number of epid strobes used to determine if target criterion has been met (prevalence is average of samples) 
 const double COOL_DOWN = 0.8; // decrease in jump size if vacillating around target prevalence prevalence
 const double WARM_UP = 1.1; // increase in jump size if undershooting target prevalence
 const double TEMP_THOLD = 0.7; // if prevalence is less that TEMP_THOLD fraction of target, jump size (temperature of search) increases (WARM_UP)
-const double TEST_EPID_SIM_LENGTH = (double)121 * 365.0; // duration of epid dynamics for simulations to fit prevalence
+const double TEST_EPID_SIM_LENGTH = (double)150 * 365.0; // duration of epid dynamics for simulations to fit prevalence
 const double INIT_WEIGHT = 0.8; // initial coefficient for jump size (jump size = INIT_WEIGHT * difference in prevalence)
 
 // ...output:
@@ -40,7 +37,7 @@ const double PROGRESS_INTERVAL = 10.0; // % interval at which to report progress
 const int COCOL_AGE_LIMIT = 5; // in *years*; Haemophilus-pneumo and pneumo-pneumo co-colonization stats printed for hosts <COCOL_AGE_LIMIT
 
 // SOCIODEMOGRAPHIC PARAMETERS
-const int N0 = 80000; // initial population size
+const int N0 = 10000; // initial population size
 const double MATURITY_AGE = (double)15.0;
 const int TSTEPS_AGE = 365; // EPID_DELTA_T per age
 const int INIT_NUM_AGE_CATS = 111; // if NO_AGE_ASSORT *not* defined, number of age categories (assume categories are YEARS), older ages borrow rates from NUM_AGES
@@ -93,42 +90,25 @@ const double RSCC_HFLU = 1.0; // reduction in susceptibility to H. flu if carryi
 const double EPSILON = 0.0001; // future time (in days) to 'instantaneous' recovery 
 
 // ...vaccination (ignored unless SIM_PCV defined)
-const double VACCINATION_START = (double)100.0*365.0; // days after start of epid simulation to begin vaccination
-const double VACCINE_EFFICACY = 0.5; // percent reduction in susceptibility to serotypes in vaccine (susceptibility is max(1-vaccine efficacy,XI))
+const double INIT_VACCINE_EFFICACY = 0.5; // percent reduction in susceptibility to serotypes in vaccine (susceptibility is max(1-vaccine efficacy,XI))
 const double VACCINE_AGE = 30 * 6; // in days--host age at which vaccinated
+const double VACCINE_COVERAGE_AGE = 30 * 13; // in days--host age at which coverage is evaluated--this is different from VACCINE_AGE because it's based off real data which isn't necessarily collected for patients at VACCINE_AGE
 
 const std::vector<int> SampleTimes =
 {
-    100 * 365,
-    101 * 365,
-    102 * 365,
-    103 * 365,
-    104 * 365,
-    105 * 365,
-    106 * 365,
-    107 * 365,
-    108 * 365,
-    109 * 365,
-    110 * 365,
-    111 * 365,
-    112 * 365,
-    113 * 365,
-    114 * 365,
-    115 * 365,
-    116 * 365,
-    117 * 365,
-    118 * 365,
-    119 * 365,
-    120 * 365
+    2001,
+	2004,
+	2007,
+	2009,
+	2011,
+	2014,
+	2016,
+	2018,
+	2020,
+	2050
 };
 
-const std::vector<std::pair<double, std::string>> VaccineSchedule = 
-{
-    {100 * 365.0, "PCV7"},
-    {110 * 365.0, "PCV13"}
-};
-
-const std::unordered_map<std::string, std::vector<std::string>> VACCINES = 
+const std::unordered_map<std::string, std::vector<std::string>> VaccineTypes = 
 {
     {"PCV7", {"4", "6A", "6B", "9V", "14", "18C", "19F", "23F"}},
     {"PCV10", {"4", "6B", "9V", "14", "18C", "19F", "23F", "1", "5", "7F"}},
@@ -185,4 +165,20 @@ const std::array<std::string, NUM_STYPES> SerotypeNames =
 	"24F",
 	"10B",
     "Flu"
+};
+
+const std::unordered_map<int, std::pair<double, std::string>> YearlyVaccinationCoverage =
+{
+	{ 2002, { 0.451, "PCV7" } },
+	{ 2003, { 0.864, "PCV7" } },
+	{ 2004, { 0.860, "PCV7" } },
+	{ 2005, { 0.873, "PCV7" } },
+	{ 2006, { 0.904, "PCV7" } },
+	{ 2007, { 0.949, "PCV7" } },
+	{ 2008, { 0.940, "PCV7" } },
+	{ 2009, { 0.928, "PCV7" } },
+	{ 2010, { 0.941, "PCV10" } },
+	{ 2011, { 0.964, "PCV10" } },
+	{ 2012, { 0.895, "PCV10" } },
+	{ 2013, { 0.956, "PCV10" } }
 };

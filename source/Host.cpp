@@ -71,7 +71,9 @@ void Host::setInf(bool b) {
 
 void Host::getVaccinated(const std::string &vaccine)
 {
-    for(const auto &vaccine_serotype : VACCINES.at(vaccine))
+	activeVaccine = vaccine;
+
+    for(const auto &vaccine_serotype : VaccineTypes.at(vaccine))
     {
         int thisSerotype = 0;
 
@@ -85,7 +87,7 @@ void Host::getVaccinated(const std::string &vaccine)
             thisSerotype++;
         }
 
-        susc[thisSerotype] = std::min(susc[thisSerotype], 1.0 - VACCINE_EFFICACY);
+        susc[thisSerotype] = std::min(susc[thisSerotype], 1.0 - INIT_VACCINE_EFFICACY);
     }
 }
 
@@ -199,21 +201,27 @@ void Host::calcLifeHist(double t, EventQueue &cePtr, double initAge, boost::mt19
 
 #ifdef SIM_PCV
     // Schedule vaccination -- implemented as change to susceptibility starting at VACCINATION_START
-    if(VACCINE_AGE < ageAtDeath && VACCINE_AGE > initAge && t >= (DEM_SIM_LENGTH + VACCINATION_START - VACCINE_AGE)) { // means current n-month-olds will get vaccinated starting then
-		int active_vaccine_index = -1;
-		for (std::size_t i = 0; i < VaccineSchedule.size(); i++)
+	using vaccination_info = std::pair<int, std::pair<double, std::string>>;
+	auto compare_year = [](const vaccination_info &a, const vaccination_info &b)
+	{
+		return a.first < b.first;
+	};
+	auto first_vaccination_year = std::min_element(YearlyVaccinationCoverage.begin(),
+		YearlyVaccinationCoverage.end(), compare_year)->first;
+	auto first_vaccination_time = DEM_SIM_LENGTH + TEST_EPID_SIM_LENGTH - VACCINE_COVERAGE_AGE;
+
+	// means current n-month-olds will get vaccinated starting then
+	if (VACCINE_AGE < ageAtDeath && VACCINE_AGE > initAge && t >= first_vaccination_time) 
+	{
+		auto relative_year = first_vaccination_year + ((int)(t - first_vaccination_time) / 365);
+		auto year_vaccination_info = YearlyVaccinationCoverage.at(relative_year);
+
+		if (r01(rng) < year_vaccination_info.first)
 		{
-			if (t > VaccineSchedule[i].first)
-			{
-				active_vaccine_index = i;
-			}
+			addEvent(t + VACCINE_AGE - initAge, Event::Type::Vaccination, id, 
+				year_vaccination_info.second == "PCV7" ? 0 : 1, cePtr);
 		}
-		if (active_vaccine_index == -1)
-		{
-			throw std::runtime_error("no active vaccine");
-		}
-        addEvent(t + VACCINE_AGE - initAge, Event::Type::Vaccination, id, active_vaccine_index, cePtr);
-    }
+	}
 #endif  
 
     // Leave home (if not already dead)
@@ -365,31 +373,6 @@ double Host::calcRecovery(int s, double currentTime, Infection & thisInf, boost:
 }
 
 void Host::calcSusc(double t) {
-
-#ifdef SIM_PCV
-    // For each pneumo serotype
-    double runSum;
-    double maxReduction;
-    for(int s = 0; s < HFLU_INDEX; s++) {
-        runSum = 0.0;
-        maxReduction = 0.0;
-        for(int z = 0; z < HFLU_INDEX; z++) {
-            runSum += simParsPtr->get_XI_ij(s, z)*(double)(immune[z]>0); // contribution of past infections
-            if(isInfectedZ(z) > 0) {
-                maxReduction = std::max(maxReduction, simParsPtr->get_reductions(z)); // contribution of current carriage
-            }
-        }
-        const auto &vaccine = VACCINES.at("PCV7");
-        bool vaccine_includes_serotype = std::find(vaccine.begin(), vaccine.end(), SerotypeNames[s]) != vaccine.end();
-        if((t - DOB >= VACCINE_AGE) && (t >= DEM_SIM_LENGTH + VACCINATION_START) && vaccine_includes_serotype) { // host vaccinated
-            susc[s] = std::min(1.0 - VACCINE_EFFICACY, 1.0 - std::min(1.0, runSum));
-        }
-        else { // host not yet vaccinated
-            susc[s] = 1.0 - std::min(1.0, runSum);
-        }
-        susc[s] *= (1.0 - maxReduction);
-    } // end for each serotype
-#else 
     // For each pneumo serotype
     double runSum;
     double maxReduction;
@@ -405,6 +388,9 @@ void Host::calcSusc(double t) {
         susc[s] = 1.0 - std::min(1.0, runSum);
         susc[ s ] *= ( 1.0 - maxReduction );
     } // end for each serotype
+
+#ifdef SIM_PCV
+	if (activeVaccine != "") getVaccinated(activeVaccine);
 #endif
 
     // For Hflu

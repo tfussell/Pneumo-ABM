@@ -75,5 +75,5 @@ private:
     double susc[NUM_STYPES];
     bool inf;
     SimPars * simParsPtr;
-
+	std::string activeVaccine;
 };
