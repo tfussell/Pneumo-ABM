@@ -144,7 +144,7 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks,
     double previous_total_prevalence_error = 1.0;
     double weight = 0.8;
 
-	std::array<double, NUM_STYPES + 1> observed_counts = { { 26.7751938, 15.82170543, 14.60465116, 13.3875969, 10.95348837, 9.736434109, 8.519379845, 4.868217054, 4.868217054, 4.868217054, 4.868217054, 3.651162791, 3.651162791, 3.651162791, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+	std::array<double, NUM_STYPES + 1> observed_counts = { { 26.7751938, 15.82170543, 14.60465116, 13.3875969, 10.95348837, 9.736434109, 8.519379845, 6.085271318, 4.868217054, 4.868217054, 4.868217054, 3.651162791, 3.651162791, 3.651162791, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 2.434108527, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 1.217054264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
 
     observed_counts[NUM_STYPES] = 403;
 
@@ -316,8 +316,8 @@ int main(int argc, const char *argv[])
     startingBeta = betaTable[bestTreatment][1];
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-	double beta = 0.0414137;
-	double serogroup_cross_immunity = 0.1;
+	double beta = 0.049;
+	double serogroup_cross_immunity = 0.2;
     match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta, serogroup_cross_immunity);
 }
 
