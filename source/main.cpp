@@ -316,8 +316,8 @@ int main(int argc, const char *argv[])
     startingBeta = betaTable[bestTreatment][1];
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-	double beta = 0.049;
-	double serogroup_cross_immunity = 0.2;
+	double beta = 0.0485;
+	double serogroup_cross_immunity = 0.1;
     match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta, serogroup_cross_immunity);
 }
 

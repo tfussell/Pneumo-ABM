@@ -69,6 +69,11 @@ void Host::setInf(bool b) {
     inf = b;
 }
 
+std::string Host::getActiveVaccine() const
+{
+    return activeVaccine;
+}
+
 void Host::getVaccinated(const std::string &vaccine)
 {
 	activeVaccine = vaccine;

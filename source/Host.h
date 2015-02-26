@@ -43,6 +43,7 @@ public:
     int getNeighborhood() const;
     int getSummedTheta() const;
     double getDOB() const;
+    std::string getActiveVaccine() const;
 
     // MEMBER FUNCTION PROTOTYPES
     void calcLifeHist(double, EventQueue &, double, boost::mt19937 &);

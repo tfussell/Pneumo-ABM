@@ -14,6 +14,39 @@
 #include "Containers.h"
 #include "SimPars.h"
 
+struct CarriageInfo
+{
+    double carriage_under_5;
+    double carriage_under_7;
+    double carriage_7_to_18;
+    double carriage_18_to_39;
+    double carriage_40_and_over;
+
+    void increment(int age, double amount=1)
+    {
+        if(age >= 0 && age < 5)
+        {
+            carriage_under_5 += amount;
+        }
+        else if(age >= 0 && age < 7)
+        {
+            carriage_under_7 += amount;
+        }
+        else if(age >= 7 && age < 18)
+        {
+            carriage_7_to_18 += amount;
+        }
+        else if(age >= 18 && age < 40)
+        {
+            carriage_18_to_39 += amount;
+        }
+        else if(age >= 40)
+        {
+            carriage_40_and_over += amount;
+        }
+    }
+};
+
 class Simulation
 {
 public:
@@ -63,7 +96,8 @@ private:
     std::string makeBigName(std::string, int);
     std::string makeBiggerName(std::string, int, std::string, int);
     void addEvent(double et, Event::Type event_type, int hid, int s);
-    std::array<double, NUM_STYPES> calculateSerotypePrevalenceRates();
+    std::array<CarriageInfo, NUM_STYPES> calculateSerotypePrevalenceRates();
+    double calculateVaccinationCoverage(double time);
 
     // STREAM MANAGEMENT
     void writeDemOutput();
