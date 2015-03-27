@@ -56,7 +56,7 @@ public:
     // MEMBER FUNCTION PROTOTYPES
     void runDemSim();
     void runEpidSim();
-    std::array<double, NUM_STYPES> runTestEpidSim();
+    void runTestEpidSim();
 
 private:
     // SIMULATION OBJECTS
@@ -96,7 +96,7 @@ private:
     std::string makeBigName(std::string, int);
     std::string makeBiggerName(std::string, int, std::string, int);
     void addEvent(double et, Event::Type event_type, int hid, int s);
-    std::array<CarriageInfo, NUM_STYPES> calculateSerotypePrevalenceRates();
+    std::array<CarriageInfo, NUM_STYPES> calculateSerotypePrevalenceRates(bool vaccinated);
     double calculateVaccinationCoverage(double time);
 
     // STREAM MANAGEMENT

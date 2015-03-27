@@ -252,7 +252,7 @@ void SimPars::set_betas(const std::array<double, NUM_STYPES> &betas)
 
 void SimPars::set_serogroup_cross_immunity(double value)
 {
-	std::vector<std::string> serogroups = { "6", "23", "19" };
+	std::vector<std::string> serogroups = { "9", "23", "19" };
 	std::unordered_map<std::string, std::vector<std::size_t>> serogroup_indices;
 
 	for (std::size_t i = 0; i < NUM_STYPES; i++)

@@ -206,20 +206,17 @@ void Host::calcLifeHist(double t, EventQueue &cePtr, double initAge, boost::mt19
 
 #ifdef SIM_PCV
     // Schedule vaccination -- implemented as change to susceptibility starting at VACCINATION_START
-	using vaccination_info = std::pair<int, std::pair<double, std::string>>;
-	auto compare_year = [](const vaccination_info &a, const vaccination_info &b)
-	{
-		return a.first < b.first;
-	};
-	auto first_vaccination_year = std::min_element(YearlyVaccinationCoverage.begin(),
-		YearlyVaccinationCoverage.end(), compare_year)->first;
-	auto first_vaccination_time = DEM_SIM_LENGTH + TEST_EPID_SIM_LENGTH - VACCINE_COVERAGE_AGE;
+    int relativeYear = 0;
+
+    if(t > TEST_EPID_SIM_LENGTH + DEM_SIM_LENGTH)
+    {
+        relativeYear = 2001 + (int)((t - (TEST_EPID_SIM_LENGTH + DEM_SIM_LENGTH)) / 365);
+    }
 
 	// means current n-month-olds will get vaccinated starting then
-	if (VACCINE_AGE < ageAtDeath && VACCINE_AGE > initAge && t >= first_vaccination_time) 
+	if (VACCINE_AGE < ageAtDeath && VACCINE_AGE > initAge && relativeYear >= 2001) 
 	{
-		auto relative_year = first_vaccination_year + ((int)(t - first_vaccination_time) / 365);
-		auto year_vaccination_info = YearlyVaccinationCoverage.at(relative_year);
+		auto year_vaccination_info = YearlyVaccinationCoverage.at(relativeYear + 1);
 
 		if (r01(rng) < year_vaccination_info.first)
 		{

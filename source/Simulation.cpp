@@ -297,7 +297,7 @@ void Simulation::runDemSim() {
     std::cout << "\t100% of this component complete." << std::endl;
 }
 
-std::array<double, NUM_STYPES> Simulation::runTestEpidSim() {
+void Simulation::runTestEpidSim() {
     if(allHosts.size() == 0) {
         std::cerr << "No hosts remaining for epidemiological simulation. Cancelling." << std::endl;
         assert(false);
@@ -312,23 +312,33 @@ std::array<double, NUM_STYPES> Simulation::runTestEpidSim() {
     EventQueue::iterator eventIter = currentEvents.begin();
     double nextTimeStep = t + EPID_DELTA_T;
 
-    // holds prevalences at strobing periods
-    std::array<double, NUM_STYPES> serotype_prevalence_rates = {0};
-
-    double prevYear = DEM_SIM_LENGTH + TEST_EPID_SIM_LENGTH - (NUM_TEST_SAMPLES * 365.0); // first simulation time to start sampling
     int prevSamples = 0;
     int extraYears = 50;
     int currentYear = 0;
     int previousYear = 0;
 
-    std::vector<std::array<CarriageInfo, NUM_STYPES>> carriage_samples;
+    std::vector<std::array<CarriageInfo, NUM_STYPES>> carriage_samples_vaccinated;
+    std::vector<std::array<CarriageInfo, NUM_STYPES>> carriage_samples_unvaccinated;
+    std::vector<double> vaccine_coverage;
 
     while(t < TEST_EPID_SIM_LENGTH + demComplete + extraYears * 365.0)
     {
-        if(t > TEST_EPID_SIM_LENGTH + demComplete)
+        if(t > TEST_EPID_SIM_LENGTH + demComplete - (20 * 365.0))
         {
             previousYear = currentYear;
-            currentYear = 2001 + (int)((t - (TEST_EPID_SIM_LENGTH + demComplete)) / 365);
+            currentYear = 1981 + (int)((t - (TEST_EPID_SIM_LENGTH + demComplete - (20 * 365.0))) / 365);
+            if(previousYear != currentYear)
+            {
+                std::cout << currentYear << std::endl;
+            }
+        }
+
+        if(currentYear != previousYear && std::find(SampleTimes.begin(), SampleTimes.end(), currentYear) != SampleTimes.end())
+        {
+            std::cout << currentYear << std::endl;
+            vaccine_coverage.push_back(calculateVaccinationCoverage(t));
+            carriage_samples_unvaccinated.push_back(calculateSerotypePrevalenceRates(false));
+            carriage_samples_vaccinated.push_back(calculateSerotypePrevalenceRates(true));
         }
 
         // Calculate new infections for every host and add events to stack
@@ -342,39 +352,6 @@ std::array<double, NUM_STYPES> Simulation::runTestEpidSim() {
             while(epidOutputStrobe < t) {
                 writeEpidOutput();
                 epidOutputStrobe += STROBE_EPID;
-            }
-            if(currentYear != previousYear && std::find(SampleTimes.begin(), SampleTimes.end(), currentYear) != SampleTimes.end())
-            {
-                std::cout << currentYear << " " << calculateVaccinationCoverage(t) << std::endl;
-                auto period_prevalence_rates = calculateSerotypePrevalenceRates();
-                carriage_samples.push_back(period_prevalence_rates);
-                for(int i = 0; i < NUM_STYPES; i++)
-                {
-					std::cout << period_prevalence_rates[i].carriage_under_5 << " ";
-                }
-				std::cout << std::endl;
-                for(int i = 0; i < NUM_STYPES; i++)
-                {
-                    std::cout << period_prevalence_rates[i].carriage_under_7 << " ";
-                }
-                std::cout << std::endl;
-                for(int i = 0; i < NUM_STYPES; i++)
-                {
-                    std::cout << period_prevalence_rates[i].carriage_7_to_18 << " ";
-                }
-                std::cout << std::endl;
-                for(int i = 0; i < NUM_STYPES; i++)
-                {
-                    std::cout << period_prevalence_rates[i].carriage_18_to_39 << " ";
-                }
-                std::cout << std::endl;
-                for(int i = 0; i < NUM_STYPES; i++)
-                {
-                    std::cout << period_prevalence_rates[i].carriage_40_and_over << " ";
-                }
-                std::cout << std::endl;
-                prevSamples++;
-                prevYear += 365.0;
             }
             while(percentDone / 100.0 <= (t - demComplete) / TEST_EPID_SIM_LENGTH) {
                 std::cout << "\t" << percentDone << "% of this test component complete." << std::endl;
@@ -392,9 +369,45 @@ std::array<double, NUM_STYPES> Simulation::runTestEpidSim() {
         nextTimeStep += EPID_DELTA_T;
     }
 
-    std::cout << "\t100% of this test component complete." << std::endl;
+    for(const auto &carriage_samples : {carriage_samples_unvaccinated, carriage_samples_vaccinated})
+    {
+        for(std::size_t year_index = 0; year_index < SampleTimes.size(); year_index++)
+        {
+            int year = SampleTimes[year_index];
+            std::cout << year << " " << vaccine_coverage[year_index] << std::endl;
+            auto &period_prevalence_rates = carriage_samples[year_index];
 
-    return serotype_prevalence_rates;
+            for(int i = 0; i < NUM_STYPES; i++)
+            {
+                std::cout << period_prevalence_rates[i].carriage_under_5 << " ";
+            }
+            std::cout << std::endl;
+
+            for(int i = 0; i < NUM_STYPES; i++)
+            {
+                std::cout << period_prevalence_rates[i].carriage_under_7 << " ";
+            }
+            std::cout << std::endl;
+
+            for(int i = 0; i < NUM_STYPES; i++)
+            {
+                std::cout << period_prevalence_rates[i].carriage_7_to_18 << " ";
+            }
+            std::cout << std::endl;
+
+            for(int i = 0; i < NUM_STYPES; i++)
+            {
+                std::cout << period_prevalence_rates[i].carriage_18_to_39 << " ";
+            }
+            std::cout << std::endl;
+
+            for(int i = 0; i < NUM_STYPES; i++)
+            {
+                std::cout << period_prevalence_rates[i].carriage_40_and_over << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
 }
 
 void Simulation::runEpidSim() {
@@ -794,22 +807,33 @@ double Simulation::calculateVaccinationCoverage(double time)
         }
     }
 
-    return (double)num_vaccinated / num_13_month_olds;
+    return num_13_month_olds > 0 ? (double)num_vaccinated / num_13_month_olds : 0;
 }
 
-std::array<CarriageInfo, NUM_STYPES> Simulation::calculateSerotypePrevalenceRates()
+std::array<CarriageInfo, NUM_STYPES> Simulation::calculateSerotypePrevalenceRates(bool vaccinated)
 {
-    CarriageInfo age_counts = { 0 };
-    std::array<CarriageInfo, NUM_STYPES> serotype_counts = { 0 };
+    // serotype_prevalence[NUM_STYPES] will be coopted for holding counts by age group
+    std::array<CarriageInfo, NUM_STYPES> serotype_prevalence = { 0 };
+
+    for(int i = 0; i < NUM_STYPES; i++)
+    {
+        serotype_prevalence[i] = { 0 };
+    }
 
     // Now count how many kids in each age group are infected -- note that not sufficient to use numInfecteds, which counts 'effective' number of infecteds 
     // (i.e., the number of infections) for purposes of calculating the force of infection
     int hostAge = 0;
     for(auto host : allHosts.get<age_tag>())
     {
+        // if(vaccinated != host_is_vaccinated)
+        if(vaccinated != (host->getActiveVaccine() != ""))
+        {
+            continue;
+        }
+
         std::vector<int> concurrent_serotypes;
 
-        for(int i = 0; i < NUM_STYPES; i++)
+        for(int i = 0; i < HFLU_INDEX; i++)
         {
             if(host->isInfectedZ(i))
             {
@@ -828,22 +852,13 @@ std::array<CarriageInfo, NUM_STYPES> Simulation::calculateSerotypePrevalenceRate
 
         if(!concurrent_serotypes.empty())
         {
-            serotype_counts[concurrent_serotypes.front()].increment(hostAge);
+            serotype_prevalence[concurrent_serotypes.front()].increment(hostAge);
         }
 
-        age_counts.increment(hostAge);
+        serotype_prevalence[NUM_STYPES - 1].increment(hostAge);
     } // end for each host
 
-    for(int i = 0; i < NUM_STYPES; i++)
-    {
-        serotype_counts[i].carriage_under_5 /= age_counts.carriage_under_5;
-        serotype_counts[i].carriage_under_7 /= age_counts.carriage_under_7;
-        serotype_counts[i].carriage_7_to_18 /= age_counts.carriage_7_to_18;
-        serotype_counts[i].carriage_18_to_39 /= age_counts.carriage_18_to_39;
-        serotype_counts[i].carriage_40_and_over /= age_counts.carriage_40_and_over;
-    }
-
-    return serotype_counts;
+    return serotype_prevalence;
 }
 
 

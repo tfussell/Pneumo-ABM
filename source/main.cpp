@@ -168,8 +168,8 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks,
         Simulation thisSim(treatmentNumber, simNumber, &thesePars);
 
         thisSim.runDemSim();
-        auto expected_prevalence = thisSim.runTestEpidSim();
-
+        /*auto expected_prevalence = */thisSim.runTestEpidSim();
+/*
         std::array<double, NUM_STYPES> prevalence_error;
 
         for(int i = 0; i < NUM_STYPES; i++)
@@ -182,20 +182,14 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks,
             }
         }
 
-        double likelihood = calculate_likelihood(expected_prevalence, observed_counts);
-
-        if(likelihood > best_likelihood)
-        {
-            best_likelihood = likelihood;
-            best_betas = betas;
-            best_serotype_ranks = serotype_ranks;
-        }
+        //double likelihood = calculate_likelihood(expected_prevalence, observed_counts);
 
         double expected_total_prevalence = std::accumulate(expected_prevalence.begin(), expected_prevalence.end(), 0.0);
         total_prevalence_error = expected_total_prevalence - observed_total_prevalence;
 
         double sum_absolute_errors = std::accumulate(prevalence_error.begin(), prevalence_error.end(), 0.0, [](double t, double d) { return t + std::abs(d); });
-
+*/
+/*
         std::cout << "Sum of absolute errors=" << sum_absolute_errors << std::endl;
         std::cout << likelihood << "(best=" << best_likelihood << ")" << std::endl;
         std::cout << "Observed prevalence=" << observed_total_prevalence << "; expected prevalence=" << expected_total_prevalence << "; error=" << total_prevalence_error << "; weight = " << weight << std::endl;
@@ -206,7 +200,8 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks,
             std::cout << "\t" << SerotypeNames[z] << "(" << z << ")" << " : [" << serotype_ranks[z] << ", " << observed_prevalence[z] << ", " << expected_prevalence[z] << ", " << prevalence_error[z] << "]," << std::endl;
         }
         std::cout << "]" << std::endl;
-
+        */
+/*
         if(abs(total_prevalence_error) < PREV_ERROR_THOLD)
         {
             fitting_beta = false;
@@ -243,6 +238,7 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks,
             std::cout << "Fitting ranks" << std::endl;
             adjust_ranks(prevalence_error, serotype_ranks);
         }
+        */
     }
 }
 
@@ -316,8 +312,8 @@ int main(int argc, const char *argv[])
     startingBeta = betaTable[bestTreatment][1];
     adjustTreatment(treatmentNumber, treatment, simNumber);
 
-	double beta = 0.0485;
-	double serogroup_cross_immunity = 0.1;
+	double beta = 0.04;
+	double serogroup_cross_immunity = 0.2;
     match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta, serogroup_cross_immunity);
 }
 
