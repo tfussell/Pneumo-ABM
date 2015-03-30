@@ -12,7 +12,7 @@
 #define MATCH_PREVALENCE // turn off to run with transmission rates in Betas_used.txt and Treatments.txt
 #define NO_HHOLDS // if defined, contact rates are independent of household status
 #define NO_AGE_ASSORT // if defined, contact rates are independent of host age
-#define SIM_PCV // if on, introduces vaccine
+//#define SIM_PCV // if on, introduces vaccine
 
 // SIMULATION PARAMETERS
 // ...input:
@@ -38,7 +38,7 @@ const double PROGRESS_INTERVAL = 10.0; // % interval at which to report progress
 const int COCOL_AGE_LIMIT = 5; // in *years*; Haemophilus-pneumo and pneumo-pneumo co-colonization stats printed for hosts <COCOL_AGE_LIMIT
 
 // SOCIODEMOGRAPHIC PARAMETERS
-const int N0 = 150000; // initial population size
+const int N0 = 1500; // initial population size
 const double MATURITY_AGE = (double)15.0;
 const int TSTEPS_AGE = 365; // EPID_DELTA_T per age
 const int INIT_NUM_AGE_CATS = 111; // if NO_AGE_ASSORT *not* defined, number of age categories (assume categories are YEARS), older ages borrow rates from NUM_AGES
@@ -66,7 +66,7 @@ const double ERR_EPSILON = 0.00007; // acceptable remainder in sum of PMFs; if l
 
 // EPIDEMIOLOGICAL PARAMETERS
 // ...initialization
-const int NUM_STYPES = 43 + 1; // = initial number of pneumo serotypes + Haemophilus influenzae
+const int NUM_STYPES = 57 + 1; // = initial number of pneumo serotypes + Haemophilus influenzae
 const int NUM_EPID_FILES = 3;
 const char * const EPID_FILENAMES[NUM_EPID_FILES] = {
     "INIT_INFECTEDS.txt", // initial fraction of population colonized with each serotype and H. influenzae
@@ -97,41 +97,6 @@ const double VACCINE_COVERAGE_AGE = 30 * 13; // in days--host age at which cover
 
 const std::vector<int> SampleTimes =
 {
-	1981,
-	1982,
-	1983,
-	1984,
-	1985,
-	1986,
-	1987,
-	1988,
-	1989,
-	1990,
-	1991,
-	1992,
-	1993,
-	1994,
-	1995,
-	1996,
-	1997,
-	1998,
-	1999,
-	2000,
-    2001,
-    2002,
-    2003,
-	2004,
-	2005,
-	2007,
-	2009,
-	2010,
-	2011,
-	2012,
-	2014,
-	2016,
-	2018,
-	2020,
-	2050
 };
 
 const std::unordered_map<std::string, std::vector<std::string>> VaccineTypes = 
@@ -143,103 +108,66 @@ const std::unordered_map<std::string, std::vector<std::string>> VaccineTypes =
 
 const std::array<std::string, NUM_STYPES> SerotypeNames = 
 {
-	"6A",
-	"23F",
 	"19F",
+	"6A",
 	"6B",
+	"23F",
 	"11A",
-	"15B/C",
-	"19A",
-	"35A/B",
 	"14",
-	"22F",
-	"9A",
-	"18C",
-	"NT",
-	"10",
-	"6C",
-	"9N",
-	"23A",
-	"35F",
+	"35B",
 	"23B",
-	"3",
-	"34",
-	"4",
-	"31",
-	"15A",
-	"38",
-	"15F",
-	"29",
-	"25A",
-	"7F",
-	"16F",
-	"33F",
-	"Pool I",
-	"17F",
-	"21",
-	"37",
+	"10A",
+	"15B",
+	"19A",
 	"9V",
-	"7C",
-	"33A",
 	"13",
-	"18F",
-	"36",
+	"15A",
+	"15C",
+	"34",
+	"3",
+	"16F",
+	"18C",
+	"19B",
+	"7C",
 	"20",
+	"23A",
+	"21",
+	"35A",
+	"1",
+	"33B",
+	"4",
+	"38",
+	"35F",
+	"10F",
+	"12F",
 	"24F",
+	"33D",
+	"29",
+	"10B",
+	"17F",
+	"18F",
+	"22A",
+	"22F",
+	"28F",
+	"8",
+	"12B",
+	"9L",
+	"5",
+	"31",
+	"40",
+	"11D",
+	"15F",
+	"19C",
+	"28A",
+	"33C",
+	"7F",
+	"18B",
+	"9A",
+	"9N",
+	"NT",
     "Flu"
 };
 
 const std::unordered_map<int, std::pair<double, std::string>> YearlyVaccinationCoverage =
 {
-	{ 2001, { 0, "PCV7" } },
-	{ 2002, { 0.451, "PCV7" } },
-	{ 2003, { 0.864, "PCV7" } },
-	{ 2004, { 0.860, "PCV7" } },
-	{ 2005, { 0.873, "PCV7" } },
-	{ 2006, { 0.904, "PCV7" } },
-	{ 2007, { 0.949, "PCV7" } },
-	{ 2008, { 0.940, "PCV7" } },
-	{ 2009, { 0.928, "PCV7" } },
-	{ 2010, { 0.941, "PCV13" } },
-	{ 2011, { 0.964, "PCV13" } },
-	{ 2012, { 0.895, "PCV13" } },
-	{ 2013, { 0.956, "PCV13" } },
-	{ 2014, { 0.956, "PCV13" } },
-	{ 2015, { 0.956, "PCV13" } },
-	{ 2016, { 0.956, "PCV13" } },
-	{ 2017, { 0.956, "PCV13" } },
-	{ 2018, { 0.956, "PCV13" } },
-	{ 2019, { 0.956, "PCV13" } },
-	{ 2020, { 0.956, "PCV13" } },
-	{ 2021, { 0.956, "PCV13" } },
-	{ 2022, { 0.956, "PCV13" } },
-	{ 2023, { 0.956, "PCV13" } },
-	{ 2024, { 0.956, "PCV13" } },
-	{ 2025, { 0.956, "PCV13" } },
-	{ 2026, { 0.956, "PCV13" } },
-	{ 2027, { 0.956, "PCV13" } },
-	{ 2028, { 0.956, "PCV13" } },
-	{ 2029, { 0.956, "PCV13" } },
-	{ 2030, { 0.956, "PCV13" } },
-	{ 2031, { 0.956, "PCV13" } },
-	{ 2032, { 0.956, "PCV13" } },
-	{ 2033, { 0.956, "PCV13" } },
-	{ 2034, { 0.956, "PCV13" } },
-	{ 2035, { 0.956, "PCV13" } },
-	{ 2036, { 0.956, "PCV13" } },
-	{ 2037, { 0.956, "PCV13" } },
-	{ 2038, { 0.956, "PCV13" } },
-	{ 2039, { 0.956, "PCV13" } },
-	{ 2040, { 0.956, "PCV13" } },
-	{ 2041, { 0.956, "PCV13" } },
-	{ 2042, { 0.956, "PCV13" } },
-	{ 2043, { 0.956, "PCV13" } },
-	{ 2044, { 0.956, "PCV13" } },
-	{ 2045, { 0.956, "PCV13" } },
-	{ 2046, { 0.956, "PCV13" } },
-	{ 2047, { 0.956, "PCV13" } },
-	{ 2048, { 0.956, "PCV13" } },
-	{ 2049, { 0.956, "PCV13" } },
-	{ 2050, { 0.956, "PCV13" } },
-	{ 2051, { 0.956, "PCV13" } }
 };

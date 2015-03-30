@@ -23,6 +23,7 @@ std::string d2str(double d);
 std::string makeName(int treatmentIdx, int simIdx, std::string suffix);
 void printTotalTime(time_t t1, time_t t2);
 
+// Returns the natural logarithm of the factorial of n.
 double log_factorial(double n)
 {
     if(n == 0)
@@ -38,6 +39,9 @@ double log_factorial(double n)
     return n * log(n) - n + (log(n * (1 + 4 * n * (1 + 2 * n)))) / 6 + log(3.141592653589793238462) / 2;
 }
 
+// Expected is an array of expected carriage rates for each serotype.
+// Observed is an array of observed serotype counts.
+// Returns the likelihood of the expected rates given the observation.
 double calculate_likelihood(const std::array<double, NUM_STYPES> &expected, const std::array<double, NUM_STYPES + 1> &observed)
 {
     double n = std::accumulate(observed.begin(), observed.end(), 0.0);
@@ -64,10 +68,13 @@ double calculate_likelihood(const std::array<double, NUM_STYPES> &expected, cons
     return log_likelihood;
 }
 
+// Errors is an array of deltas between observed and expected carriage prevalence.
+// Ranks is a reference to an array of ranks in the range [1, NUM_STYPES].
+// Each rank in ranks will be adjusted based on the error.
+// A positive error means prevalence was too high, so rank should be adjusted upwards and vice versa.
 void adjust_ranks(const std::array<double, NUM_STYPES> &errors, std::array<double, NUM_STYPES> &ranks)
 {
     const double delta = 1;
-    //auto sum_error = std::accumulate(errors.begin(), errors.end(), 0.0, [](double a, double b) { return a + std::abs(b); });
     std::array<double, NUM_STYPES> scaled_errors;
     std::copy(errors.begin(), errors.end(), scaled_errors.begin());
     std::for_each(scaled_errors.begin(), scaled_errors.end(), [=](double &d) { d *= delta; });
@@ -105,6 +112,8 @@ void adjust_ranks(const std::array<double, NUM_STYPES> &errors, std::array<doubl
     }
 }
 
+
+// Adjust the beta value for each serotype (they all use the same value).
 void adjustBeta(double preve, double w, std::array<double, NUM_STYPES> &betas)
 {
     for(int b = 0; b < NUM_STYPES; b++)
@@ -120,6 +129,7 @@ void adjustBeta(double preve, double w, std::array<double, NUM_STYPES> &betas)
     }
 }
 
+// Given an array of starting ranks, external_ranks, a starting beta, startingBeta, and a cross-immunity parameter for for some serogroups, serogroupCrossImmunity, modify ranks continuously until prevalence is within 95% condfidence interval.
 void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks, 
 	int treatmentNumber, int simNumber, double /*treatment*/, 
 	double startingBeta, double serogroupCrossImmunity)
@@ -242,6 +252,8 @@ void match_prevalence(const std::array<double, NUM_STYPES> &external_ranks,
     }
 }
 
+// Perform a simulation.
+// This function is outdated.
 void run_simulation(int simNumber, int treatmentNumber)
 {
     //std::cout << "\tBeginning simulation #" << simNumber << std::endl;
@@ -257,6 +269,9 @@ void run_simulation(int simNumber, int treatmentNumber)
     printTotalTime(tic, toc);
 }
 
+// The entry point for the model.
+// Reads input parameters specifying starting serotype ranks.
+// Creates and runs a simulation based on inputs.
 int main(int argc, const char *argv[])
 {
     int treatmentNumber = 1;
@@ -317,6 +332,7 @@ int main(int argc, const char *argv[])
     match_prevalence(external_ranks, treatmentNumber, simNumber, treatment, beta, serogroup_cross_immunity);
 }
 
+// Create the XI matrix, setting the diagonal elements to treatment and all other values to 0.
 void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {
     double thisXI[NUM_STYPES][NUM_STYPES];
     for(int i = 0; i < NUM_STYPES; i++) {
@@ -347,12 +363,16 @@ void adjustTreatment(int treatmentNumber, double treatment, int simNumber) {
     xiStream.close();
 }
 
+// Convert a double to a string.
+//TODO: this should be replaced with std::to_string(double).
 std::string d2str(double d) {
     std::stringstream t;
     t << d;
     return t.str();
 }
 
+// Input files are in the format "tr_<treatment>_sim_<sim_index>_<file_type>".
+// This returns a string by replacing those three parameters.
 std::string makeName(int treatmentIdx, int simIdx, std::string suffix) {
     std::string thisCtr = d2str(simIdx);
     std::string thisTr = d2str(treatmentIdx);
@@ -360,6 +380,7 @@ std::string makeName(int treatmentIdx, int simIdx, std::string suffix) {
     return thisName;
 }
 
+// Print the current settings, set in the header file Parameters.h.
 void printAssumptions() {
     std::cout << "Model assumptions:" << std::endl;
 #ifdef NO_HHOLDS
@@ -381,6 +402,7 @@ void printAssumptions() {
 #endif
 }
 
+// Print to stdout a human readable representation of the difference between t2 and t1.
 void printTotalTime(time_t t1, time_t t2) {
     auto time_difference = static_cast<int>(t2 - t1);
     if(time_difference < 60) {
